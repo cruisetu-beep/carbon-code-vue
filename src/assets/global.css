@@ -214,21 +214,21 @@
   flex: 1;
   position: relative;
   overflow: hidden;
-  background: #eef3fb;
+  background: #dce8f5;
 }
 .dv-canvas-svg-wrap::before {
   content: "";
   position: absolute; inset: 0;
   background-image:
-    radial-gradient(ellipse 60% 60% at 50% 50%, rgba(100,160,220,0.08), transparent 70%);
+    radial-gradient(ellipse 60% 60% at 50% 50%, rgba(80,140,210,0.14), transparent 70%);
   pointer-events: none;
 }
 .dv-canvas-svg-wrap::after {
   content: "";
   position: absolute; inset: 0;
   background-image:
-    linear-gradient(rgba(100,160,220,0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(100,160,220,0.07) 1px, transparent 1px);
+    linear-gradient(rgba(80,140,210,0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(80,140,210,0.12) 1px, transparent 1px);
   background-size: 40px 40px;
   pointer-events: none;
 }
