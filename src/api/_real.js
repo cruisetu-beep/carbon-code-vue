@@ -8,9 +8,9 @@ export function getPackageList() {
   return http.get('/packages')
 }
 
-// ── 资源包详情 ────────────────────────────────────────────────
-export function getPackageDetail(code) {
-  return http.get(`/packages/${code}/detail`)
+// ── 资源包详情（传 buildId） ───────────────────────────────────
+export function getPackageDetail(buildId) {
+  return http.get('/Resource/getResourcePackage', { params: { buildId } })
 }
 
 // ── 统计汇总 ──────────────────────────────────────────────────
@@ -29,3 +29,4 @@ export function uploadDoc(pkgCode, formData) {
     headers: { 'Content-Type': 'multipart/form-data' },
   })
 }
+
