@@ -5,7 +5,7 @@
     <div>
       <h1 class="page-title">
         <AppIcon name="cube" :size="22" stroke="var(--brand-2)"/>
-        {{ pkg.name }}
+        {{ buildingName }}
         <span class="dv-head-code">{{ pkg.code }}</span>
         <span v-if="pkg.score && pkg.score !== '—'" class="dv-head-score">
           碳效码 {{ pkg.score }} · {{ pkg.cls }}
@@ -94,8 +94,8 @@ const store = usePackageStore()
 const detail = computed(() => store.getDetail(props.pkg.code))
 
 // pkg 变化时触发拉取（首次进入 + 切换建筑）
-onMounted(() => store.fetchDetail(props.pkg.code))
-watch(() => props.pkg.code, code => store.fetchDetail(code))
+onMounted(() => store.fetchDetail(props.pkg.code, props.pkg.buildId))
+watch(() => props.pkg.code, code => store.fetchDetail(code, props.pkg.buildId))
 
 // ── 状态 ──────────────────────────────────────────────────────
 const selectedId        = ref('building')
@@ -147,5 +147,6 @@ const selectedNode = computed(() => {
   return nodes.find(n => n.id === selectedId.value) || null
 })
 
+const buildingName = computed(() => detail.value?._raw?.resourceName || props.pkg.name)
 const crumbName = computed(() => selectedNode.value?.name || '建筑')
 </script>
