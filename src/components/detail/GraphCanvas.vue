@@ -16,20 +16,16 @@
       </div>
       <div class="dv-toolbar-divider"/>
 
-      <!-- 类型筛选 -->
-      <div class="dv-toolbar-group">
-        <span class="dv-toolbar-label">类型</span>
-        <button
-          v-for="[k, n] in filterOptions" :key="k"
-          :class="['dv-filter-chip', filter[k] && 'on']"
-          :style="{ '--cl': DV_COLORS[k], whiteSpace: 'nowrap' }"
-          @click="filter[k] = !filter[k]"
-        >
-          <span class="dv-filter-dot"/>{{ n }}
-        </button>
+      <!-- 节点/关系统计 + 操作提示 -->
+      <div class="dv-toolbar-group" style="gap:10px">
+        <span class="dv-toolbar-label">节点</span>
+        <span class="dv-zoom-text" style="min-width:24px">{{ visibleNodes.length }}</span>
+        <span class="dv-toolbar-label" style="margin-left:4px">关系</span>
+        <span class="dv-zoom-text" style="min-width:24px">{{ visibleEdges.length }}</span>
+        <div class="dv-toolbar-divider"/>
+        <AppIcon name="sparkles" :size="10" stroke="#5a7499"/>
+        <span class="dv-toolbar-label" style="margin-right:0">拖拽平移 · 滚轮缩放</span>
       </div>
-
-      <div style="flex:1"/>
 
     </div>
 
@@ -42,22 +38,6 @@
       @mouseleave="onMouseUp"
       @wheel.prevent="onWheel"
     >
-      <!-- 左上统计 -->
-      <div class="dv-canvas-stats">
-        <div class="dv-canvas-stats-row">
-          <span class="dv-canvas-stats-label">节点</span>
-          <span class="dv-canvas-stats-value">{{ visibleNodes.length }}</span>
-        </div>
-        <div class="dv-canvas-stats-row">
-          <span class="dv-canvas-stats-label">关系</span>
-          <span class="dv-canvas-stats-value">{{ visibleEdges.length }}</span>
-        </div>
-        <div class="dv-canvas-stats-tip">
-          <AppIcon name="sparkles" :size="9" stroke="#4dc9ff"/>
-          <span>拖拽平移 · 滚轮缩放</span>
-        </div>
-      </div>
-
       <svg
         width="100%" height="100%"
         :viewBox="`0 0 ${W} ${H}`"
