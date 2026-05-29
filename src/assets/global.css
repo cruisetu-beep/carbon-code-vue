@@ -148,39 +148,38 @@
 .dv-canvas-toolbar {
   display: flex; align-items: center; gap: 8px;
   padding: 10px 14px;
-  background: rgba(13,27,53,0.6);
-  border-bottom: 1px solid rgba(77,201,255,0.15);
-  backdrop-filter: blur(8px);
+  background: rgba(240,245,252,0.98);
+  border-bottom: 1px solid rgba(100,160,220,0.2);
   z-index: 5;
 }
 .dv-toolbar-group { display: flex; align-items: center; gap: 4px; }
 .dv-toolbar-divider {
   width: 1px; height: 20px;
-  background: rgba(77,201,255,0.2);
+  background: rgba(100,140,200,0.25);
   margin: 0 6px;
 }
 .dv-toolbar-label {
-  font-size: 11px; color: #8da3c8;
+  font-size: 11px; color: #5a7499;
   margin-right: 4px;
 }
 .dv-tool-btn {
   width: 26px; height: 26px;
   display: inline-flex; align-items: center; justify-content: center;
-  background: rgba(77,201,255,0.08);
-  border: 1px solid rgba(77,201,255,0.2);
+  background: rgba(100,140,200,0.08);
+  border: 1px solid rgba(100,140,200,0.25);
   border-radius: 4px;
-  color: #b8c8e6;
+  color: #4a6080;
   cursor: pointer;
   transition: all 150ms;
 }
 .dv-tool-btn:hover {
-  background: rgba(77,201,255,0.18);
-  border-color: rgba(77,201,255,0.4);
-  color: #4dc9ff;
+  background: rgba(100,140,200,0.16);
+  border-color: rgba(100,140,200,0.5);
+  color: #2a5298;
 }
 .dv-zoom-text {
   font-family: "JetBrains Mono", monospace;
-  font-size: 11px; color: #b8c8e6;
+  font-size: 11px; color: #4a6080;
   padding: 0 6px; min-width: 48px; text-align: center;
 }
 .dv-filter-chip {
@@ -215,20 +214,21 @@
   flex: 1;
   position: relative;
   overflow: hidden;
+  background: #eef3fb;
 }
 .dv-canvas-svg-wrap::before {
   content: "";
   position: absolute; inset: 0;
   background-image:
-    radial-gradient(ellipse 50% 50% at 50% 50%, rgba(77,201,255,0.04), transparent 70%);
+    radial-gradient(ellipse 60% 60% at 50% 50%, rgba(100,160,220,0.08), transparent 70%);
   pointer-events: none;
 }
 .dv-canvas-svg-wrap::after {
   content: "";
   position: absolute; inset: 0;
   background-image:
-    linear-gradient(rgba(77,201,255,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(77,201,255,0.03) 1px, transparent 1px);
+    linear-gradient(rgba(100,160,220,0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(100,160,220,0.07) 1px, transparent 1px);
   background-size: 40px 40px;
   pointer-events: none;
 }
@@ -237,16 +237,15 @@
   position: absolute; bottom: 12px; left: 14px;
   display: flex; flex-wrap: wrap; gap: 10px;
   padding: 8px 12px;
-  background: rgba(13,27,53,0.7);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(77,201,255,0.2);
+  background: rgba(240,245,252,0.95);
+  border: 1px solid rgba(100,160,220,0.2);
   border-radius: 8px;
   font-size: 11px;
   z-index: 5;
 }
 .dv-legend-item {
   display: inline-flex; align-items: center; gap: 4px;
-  color: #b8c8e6;
+  color: #4a6080;
 }
 .dv-legend-dot {
   width: 8px; height: 8px; border-radius: 50%;
