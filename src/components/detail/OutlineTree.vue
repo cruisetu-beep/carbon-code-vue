@@ -8,7 +8,7 @@
     <!-- 建筑根节点 -->
     <TreeNode
       :nodeId="'building'" type="building"
-      :name="detail._raw?.resourceName || pkg.name" :selectedId="selectedId"
+      :name="detail._buildName || detail._raw?.resourceName || pkg.name" :selectedId="selectedId"
       :defaultOpen="true"
       @select="$emit('select', $event)"
     >
