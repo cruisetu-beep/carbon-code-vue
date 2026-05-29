@@ -19,11 +19,10 @@ http.interceptors.request.use(
 // 响应拦截：统一解包 / 错误处理
 http.interceptors.response.use(
   res => {
-    // 后端统一返回 { code, data, message } 时在这里解包
-    // 如果后端直接返回数据本身，把下面改成 return res.data
-    if (res.data?.code !== undefined) {
-      if (res.data.code === 0 || res.data.code === 200) return res.data.data
-      return Promise.reject(new Error(res.data.message || '接口错误'))
+    // 后端统一返回 { result, resultCode, data, errorMsg } 结构
+    if (res.data?.result !== undefined) {
+      if (res.data.result === true) return res.data.data
+      return Promise.reject(new Error(res.data.errorMsg || res.data.errorDesc || '接口错误'))
     }
     return res.data
   },
@@ -41,3 +40,4 @@ http.interceptors.response.use(
 )
 
 export default http
+
