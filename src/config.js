@@ -4,5 +4,6 @@
 
 // 接口开关：true = 使用本地 mock 数据（后端未就绪时）
 //           false = 使用真实后端接口
-export const MOCK = false
+// 注意：详情页接口始终走真实后端，不受此开关影响
+export const MOCK = true
 
