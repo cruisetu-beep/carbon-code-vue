@@ -147,6 +147,6 @@ const selectedNode = computed(() => {
   return nodes.find(n => n.id === selectedId.value) || null
 })
 
-const buildingName = computed(() => detail.value?._raw?.resourceName || props.pkg.name)
+const buildingName = computed(() => detail.value?._buildName || detail.value?._raw?.resourceName || props.pkg.name)
 const crumbName = computed(() => selectedNode.value?.name || '建筑')
 </script>
