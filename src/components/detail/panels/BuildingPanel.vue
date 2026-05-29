@@ -2,7 +2,7 @@
   <div class="dv-panel">
     <PanelHeader
       icon="cube" :color="DV_COLORS.building" type="建筑实体"
-      :name="detail._raw?.resourceName || pkg.name"
+      :name="detail._buildName || detail._raw?.resourceName || pkg.name"
       :sub="`${pkg.code} · ${FUNC_MAP[pkg.func]} · ${pkg.area.toLocaleString()} ㎡`"
     />
     <AISummary :text="b.summary"/>
