@@ -6,73 +6,76 @@ import {
   getPackageSummary,
 } from '../api/packages.js'
 
-// ── 接口数据适配：把后端返回的 data 转成前端 detail 格式 ──────
+// ── 模块 type → 颜色/图标映射 ────────────────────────────────
+const MODULE_META = {
+  subEnergy:              { color: '#4dc9ff', icon: 'panel' },
+  greenBuild:             { color: '#2bd9a8', icon: 'leaf'  },
+  virtualDaynamo:         { color: '#7a5cff', icon: 'bolt'  },
+  savingRenovation:       { color: '#2bd9a8', icon: 'leaf'  },
+  energyAudit:            { color: '#4dc9ff', icon: 'scan'  },
+  benchmark:              { color: '#a799ff', icon: 'graph' },
+  effictImprove:          { color: '#ff8a47', icon: 'zap'   },
+  energyUnit:             { color: '#4dc9ff', icon: 'panel' },
+  solar:                  { color: '#ff8a47', icon: 'sun'   },
+  charge:                 { color: '#ffb547', icon: 'plug'  },
+  carbonQR:               { color: '#2bd9a8', icon: 'sparkles'},
+  certificateGlectricity: { color: '#2bd9a8', icon: 'leaf'  },
+  blueprint:              { color: '#a799ff', icon: 'panel' },
+  others:                 { color: '#888',    icon: 'panel' },
+}
+
+// ── 接口数据适配：新接口 getResourceRelationData 返回结构 ─────
+// data.nodes = 建筑根节点（type:"root"）
+// data.nodes.children[] = 一级节点列表，每项有 id/type/name/data/children
 function adaptDetail(raw) {
   if (!raw) return null
 
-  // 模块存在性判断（有数据才显示节点）
-  const MODULE_CONFIG = [
-    { key: 'subEnergy',             id: 'sub_meter',   name: '分项计量',   color: '#4dc9ff', icon: 'panel' },
-    { key: 'virtualDaynamo',        id: 'vpp',         name: '虚拟电厂',   color: '#7a5cff', icon: 'bolt'  },
-    { key: 'savingRenovation',      id: 'retrofit',    name: '节能改造',   color: '#2bd9a8', icon: 'leaf'  },
-    { key: 'solar',                 id: 'pv',          name: '光伏发电',   color: '#ff8a47', icon: 'sun'   },
-    { key: 'charge',                id: 'charge',      name: '充电桩',     color: '#ffb547', icon: 'plug'  },
-    { key: 'greenBuild',            id: 'green',       name: '绿色建筑',   color: '#2bd9a8', icon: 'leaf'  },
-    { key: 'energyAudit',           id: 'audit',       name: '能源审计',   color: '#4dc9ff', icon: 'scan'  },
-    { key: 'benchmark',             id: 'benchmark',   name: '能效对标',   color: '#a799ff', icon: 'graph' },
-    { key: 'effictImprove',         id: 'effict',      name: '能效提升',   color: '#ff8a47', icon: 'zap'   },
-    { key: 'energyUnit',            id: 'energyUnit',  name: '重点用能单位', color: '#4dc9ff', icon: 'panel' },
-    { key: 'carbonQR',              id: 'carbonQR',    name: '碳效码',     color: '#2bd9a8', icon: 'sparkles'},
-    { key: 'certificateGlectricity', id: 'greenCert', name: '绿电绿证',   color: '#2bd9a8', icon: 'leaf'  },
-    { key: 'blueprint',             id: 'blueprint',   name: '图纸',       color: '#a799ff', icon: 'panel' },
-    { key: 'others',                id: 'others',      name: '其他',       color: '#888',    icon: 'panel' },
-  ]
+  const rootNode = raw.nodes
+  if (!rootNode) return null
 
-  // 判断模块是否有有效数据
-  function hasData(val) {
-    if (val === null || val === undefined) return false
-    if (Array.isArray(val)) return val.length > 0
-    if (typeof val === 'object') return Object.keys(val).length > 0
-    return true
+  // 建筑名称
+  const buildName = raw.name || rootNode.data?.buildName || ''
+
+  // 一级节点 → 子系统列表（过滤掉 aiSummary 类型）
+  const firstLevelNodes = (rootNode.children || []).filter(
+    n => n.type !== 'aiSummary'
+  )
+
+  const subsystems = firstLevelNodes.map(node => {
+    const meta = MODULE_META[node.type] || { color: '#4dc9ff', icon: 'panel' }
+    return {
+      id:       node.id,
+      key:      node.type,
+      name:     node.name,
+      color:    meta.color,
+      icon:     meta.icon,
+      summary:  '',
+      stats:    [],
+      realtime: null,
+      groups:   [],
+      docs:     [],
+      devices:  [],
+      // 保留原始节点数据供后续面板使用
+      _node:    node,
+    }
+  })
+
+  // 能耗曲线：从分项计量节点的 data 子节点里找
+  let energy30d = []
+  const subEnergyNode = firstLevelNodes.find(n => n.type === 'subEnergy')
+  if (subEnergyNode) {
+    const dataChild = (subEnergyNode.children || []).find(c => c.type === 'data')
+    if (dataChild && Array.isArray(dataChild.data)) {
+      // 按时间排序取最近 30 个点的 value
+      const sorted = [...dataChild.data]
+        .sort((a, b) => new Date(a.time) - new Date(b.time))
+      energy30d = sorted.slice(-30).map(d => d.value || 0)
+    }
   }
 
-  // 生成有数据的子系统列表
-  const subsystems = MODULE_CONFIG
-    .filter(m => hasData(raw[m.key]))
-    .map(m => ({
-      id: m.id,
-      key: m.id,
-      name: m.name,
-      color: m.color,
-      icon: m.icon,
-      summary: '',
-      stats: [],
-      realtime: null,
-      groups: [],
-      docs: [],
-      devices: [],
-      // 保留原始数据供后续面板使用
-      _raw: raw[m.key],
-    }))
-
-  // 碳效码：取最新年份
-  const latestCarbonQR = Array.isArray(raw.carbonQR) && raw.carbonQR.length > 0
-    ? raw.carbonQR.sort((a, b) => b.evaDate - a.evaDate)[0]
-    : null
-
-  // 建筑基本信息
-  const generalInfo = raw.subEnergy?.generalInfo || []
-  const areaItem    = generalInfo.find(g => g.key === '建筑面积')
-  const area        = areaItem ? parseFloat(areaItem.value) || 0 : 0
-
-  // 能耗曲线（今日）
-  const todaySeries = raw.subEnergy?.energyChart?.series?.find(s => s.name === '今日能耗')
-  const energy30d   = todaySeries?.data || []
-
   return {
-    // 建筑根节点
     building: {
-      summary: `${raw.resourceName} 知识库已完成资料解析与图谱融合。`,
+      summary: `${buildName} 知识库已完成资料解析与图谱融合。`,
       stats: {
         docs:      0,
         entities:  subsystems.length,
@@ -85,17 +88,16 @@ function adaptDetail(raw) {
       },
       energy30d,
     },
-    // 子系统（第一层节点）
     subsystems,
     groups:    {},
     devices:   {},
     docs:      {},
     chunks:    {},
     standards: [],
-    // 额外挂载原始数据，供详情面板使用
-    _raw: raw,
-    _carbonQR: latestCarbonQR,
-    _area: area,
+    // 挂载原始数据
+    _raw:      raw,
+    _rootNode: rootNode,
+    _buildName: buildName,
   }
 }
 
