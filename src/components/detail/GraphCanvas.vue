@@ -22,7 +22,7 @@
         <button
           v-for="[k, n] in filterOptions" :key="k"
           :class="['dv-filter-chip', filter[k] && 'on']"
-          :style="{ '--cl': DV_COLORS[k] }"
+          :style="{ '--cl': DV_COLORS[k], whiteSpace: 'nowrap' }"
           @click="filter[k] = !filter[k]"
         >
           <span class="dv-filter-dot"/>{{ n }}
@@ -31,29 +31,6 @@
 
       <div style="flex:1"/>
 
-      <!-- 搜索框 -->
-      <div class="dv-search-wrap" style="position:relative">
-        <AppIcon name="search" :size="11" stroke="#8da3c8"/>
-        <input
-          v-model="searchQ"
-          class="dv-search-input"
-          placeholder="搜索节点 / 切片关键词..."
-        />
-        <span v-if="searchQ" class="dv-search-clear" @click="searchQ = ''">×</span>
-        <!-- 搜索结果下拉 -->
-        <div v-if="searchResults.length" class="dv-search-results">
-          <div class="dv-search-results-head">找到 {{ searchResults.length }} 项 · 点击跳转</div>
-          <div
-            v-for="r in searchResults" :key="r.id"
-            class="dv-search-result-item"
-            @click="onSearchSelect(r.id)"
-          >
-            <span class="dv-search-result-dot" :style="{ background: DV_COLORS[r.type] }"/>
-            <span class="dv-search-result-type">{{ DV_TYPE_LABEL[r.type] }}</span>
-            <span class="dv-search-result-name">{{ r.name }}</span>
-          </div>
-        </div>
-      </div>
     </div>
 
     <!-- 画布 -->
