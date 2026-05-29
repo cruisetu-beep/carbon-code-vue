@@ -142,6 +142,7 @@ function onSelectNode(id) {
 
 // ── 当前选中节点对象（右栏面板需要） ──────────────────────────
 const selectedNode = computed(() => {
+  if (!detail.value) return null
   const { nodes } = dvBuildGraph(detail.value, expandedSubsystem.value, expandedDoc.value)
   return nodes.find(n => n.id === selectedId.value) || null
 })
