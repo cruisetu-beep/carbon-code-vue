@@ -10,7 +10,7 @@ export function getPackageList() {
 
 // ── 资源包详情（传 buildId） ───────────────────────────────────
 export function getPackageDetail(buildId) {
-  return http.get('/Resource/getResourcePackage', { params: { buildId } })
+  return http.get('/Resource/getResourceRelationData', { params: { buildId } })
 }
 
 // ── 统计汇总 ──────────────────────────────────────────────────
