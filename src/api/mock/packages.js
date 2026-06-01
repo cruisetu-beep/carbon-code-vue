@@ -3,7 +3,6 @@
 // 后端就绪后此文件不再使用，不需要删除
 
 import { SAMPLE_PKGS } from '../../data/samplePkgs.js'
-import { dvGetDetail }  from '../../utils/buildGraph.js'
 
 // 模拟网络延迟（ms），设为 0 可关闭
 const DELAY = 300
@@ -18,9 +17,8 @@ export async function getPackageList() {
 
 // ── 资源包详情 ────────────────────────────────────────────────
 export async function getPackageDetail(code) {
-  await delay(DELAY)
-  const pkg = SAMPLE_PKGS.find(p => p.code === code)
-  if (!pkg) throw new Error(`资源包 ${code} 不存在`)
+  return Promise.reject(new Error('mock: detail always uses real API'))
+} 不存在`)
   return dvGetDetail(pkg)
 }
 
