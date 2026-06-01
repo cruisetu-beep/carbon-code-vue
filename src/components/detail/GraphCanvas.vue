@@ -28,8 +28,8 @@
     <div ref="chartEl" class="dv-canvas-svg-wrap" style="width:100%;flex:1;min-height:0"/>
 
     <div class="dv-canvas-legend">
-      <span v-for="[k, n] in typeEntries" :key="k" class="dv-legend-item">
-        <span class="dv-legend-dot" :style="{ background: DV_COLORS[k] }"/>{{ n }}
+      <span v-for="item in LEGEND_ITEMS" :key="item.key" class="dv-legend-item">
+        <span class="dv-legend-dot" :style="{ background: item.color }"/>{{ item.label }}
       </span>
     </div>
   </div>
@@ -39,7 +39,6 @@
 import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import * as echarts from 'echarts'
 import AppIcon from '../shared/AppIcon.vue'
-import { DV_COLORS, DV_TYPE_LABEL } from '../../data/constants.js'
 
 const props = defineProps({
   detail:            { type: Object, required: true },
@@ -59,20 +58,25 @@ const edgeCount = ref(0)
 // 当前展开的二级节点 id（展示三级节点）
 const expandedLv2 = ref(null)
 
+// ── 四层颜色方案 ──────────────────────────────────────────────
+const COLOR_L0   = '#4dc9ff'   // 根节点（建筑）  亮蓝
+const COLOR_L1   = '#2bd9a8'   // 一级节点        翠绿
+const COLOR_L2   = '#a799ff'   // 二级节点        紫色
+const COLOR_L3   = '#ffb547'   // 三级普通节点    琥珀橙
+const COLOR_FILE = '#ff6b8a'   // 三级文件节点    玫瑰红
+
+const LEGEND_ITEMS = [
+  { key: 'l0',   color: COLOR_L0,   label: '建筑' },
+  { key: 'l1',   color: COLOR_L1,   label: '一级节点' },
+  { key: 'l2',   color: COLOR_L2,   label: '二级节点' },
+  { key: 'l3',   color: COLOR_L3,   label: '三级节点' },
+  { key: 'file', color: COLOR_FILE, label: '文件' },
+]
+
 const SIZE = { building: 30, subsystem: 16, group: 11, doc: 9, chunk: 8 }
 
-const SUB_COLORS = {
-  subEnergy: '#4dc9ff', greenBuild: '#2bd9a8', virtualDaynamo: '#7a5cff',
-  savingRenovation: '#2bd9a8', energyAudit: '#4dc9ff', benchmark: '#a799ff',
-  effictImprove: '#ff8a47', energyUnit: '#4dc9ff', solar: '#ff8a47',
-  charge: '#ffb547', carbonQR: '#2bd9a8', certificateGlectricity: '#2bd9a8',
-  blueprint: '#a799ff', others: '#888',
-}
-
-function lv2Type(n) {
-  if (n.type === 'file') return 'doc'
-  if (n.type === 'data' || n.type === 'dataQuantity') return 'chunk'
-  return 'group'
+function isFileNode(node) {
+  return node.levelType === '文件节点' || node.type === 'file'
 }
 
 // ── 固定环形布局，坐标完全由计算决定，不用力导向 ────────────
@@ -94,7 +98,7 @@ function buildGraphData() {
     x: cx, y: cy, fixed: true,
     symbolSize: SIZE.building,
     cursor: 'pointer',
-    itemStyle: { color: '#4dc9ff', shadowBlur: 20, shadowColor: '#4dc9ff' },
+    itemStyle: { color: COLOR_L0, shadowBlur: 20, shadowColor: COLOR_L0 },
     label: { show: true, position: 'inside', formatter: '建筑',
              fontSize: 13, fontWeight: 'bold', color: '#fff',
              textBorderColor: 'transparent' },
@@ -110,7 +114,6 @@ function buildGraphData() {
     const ang = -Math.PI / 2 + i * angleStep1
     const x   = cx + Math.cos(ang) * R1
     const y   = cy + Math.sin(ang) * R1
-    const color = SUB_COLORS[lv1.type] || '#4dc9ff'
     const isSel = lv1.id === props.selectedId
 
     nodes.push({
@@ -119,11 +122,11 @@ function buildGraphData() {
       symbolSize: isSel ? SIZE.subsystem * 1.5 : SIZE.subsystem,
       cursor: 'pointer',
       itemStyle: {
-        color,
-        borderColor: isSel ? '#fff' : color,
+        color: COLOR_L1,
+        borderColor: isSel ? '#fff' : COLOR_L1,
         borderWidth: isSel ? 2 : 0,
         shadowBlur: isSel ? 14 : 6,
-        shadowColor: color,
+        shadowColor: COLOR_L1,
       },
       label: {
         show: true, position: 'bottom',
@@ -131,10 +134,10 @@ function buildGraphData() {
         fontSize: 11, color: '#e8f0fe',
         textBorderColor: 'rgba(0,0,0,0.6)', textBorderWidth: 2,
       },
-      _level: 1, _angle: ang, _color: color, _lv1id: lv1.id,
+      _level: 1, _angle: ang, _lv1id: lv1.id,
     })
     edges.push({ source: 'building', target: lv1.id,
-      lineStyle: { color: 'rgba(100,160,220,0.3)', width: 1.2 } })
+      lineStyle: { color: 'rgba(43,217,168,0.25)', width: 1.2 } })
 
     // L2 二级节点：扇形分布在第二圈
     const lv2List = (lv1.children || []).filter(n => n.type !== 'aiSummary')
@@ -146,7 +149,6 @@ function buildGraphData() {
       const a  = lv2List.length === 1 ? ang : fanStart + (fanSpan / (lv2List.length - 1)) * j
       const lx = cx + Math.cos(a) * R2
       const ly = cy + Math.sin(a) * R2
-      const t  = lv2Type(lv2)
       const lv2Sel = lv2.id === props.selectedId
 
       nodes.push({
@@ -155,11 +157,11 @@ function buildGraphData() {
         symbolSize: lv2Sel ? SIZE.group * 1.5 : SIZE.group,
         cursor: 'pointer',
         itemStyle: {
-          color,
-          borderColor: lv2Sel ? '#fff' : color,
+          color: COLOR_L2,
+          borderColor: lv2Sel ? '#fff' : COLOR_L2,
           borderWidth: lv2Sel ? 2 : 0,
           shadowBlur: lv2Sel ? 12 : 3,
-          shadowColor: color, opacity: 0.85,
+          shadowColor: COLOR_L2, opacity: 0.85,
         },
         label: {
           show: lv2Sel,
@@ -168,12 +170,11 @@ function buildGraphData() {
           fontSize: 10, color: '#e8f0fe',
           textBorderColor: 'rgba(0,0,0,0.6)', textBorderWidth: 2,
         },
-        _level: 2, _type2: t, _angle: a, _color: color, _lv1id: lv1.id,
+        _level: 2, _angle: a, _lv1id: lv1.id,
         _hasChildren: (lv2.children || []).filter(n => n.type !== 'aiSummary').length > 0,
       })
       edges.push({ source: lv1.id, target: lv2.id,
-        lineStyle: { color: 'rgba(100,160,220,0.2)', width: 0.8,
-                     type: t === 'doc' ? 'dashed' : 'solid' } })
+        lineStyle: { color: 'rgba(167,153,255,0.25)', width: 0.8, type: 'solid' } })
 
       // L3 三级节点：仅当此二级节点被展开时显示
       if (expandedLv2.value === lv2.id) {
@@ -184,6 +185,8 @@ function buildGraphData() {
 
         lv3List.forEach((lv3, k) => {
           const sa = lv3List.length === 1 ? a : subStart + (subSpan / (lv3List.length - 1)) * k
+          const isFile = isFileNode(lv3)
+          const l3Color = isFile ? COLOR_FILE : COLOR_L3
           nodes.push({
             id: lv3.id, name: lv3.name,
             x: cx + Math.cos(sa) * R3,
@@ -191,17 +194,17 @@ function buildGraphData() {
             fixed: true,
             symbolSize: SIZE.doc,
             cursor: 'pointer',
-            itemStyle: { color, shadowBlur: 3, shadowColor: color, opacity: 0.75 },
+            itemStyle: { color: l3Color, shadowBlur: 3, shadowColor: l3Color, opacity: 0.85 },
             label: {
               show: true, position: 'bottom',
               formatter: lv3.name.length > 8 ? lv3.name.slice(0,7)+'…' : lv3.name,
               fontSize: 10, color: '#e8f0fe',
               textBorderColor: 'rgba(0,0,0,0.6)', textBorderWidth: 2,
             },
-            _level: 3,
+            _level: 3, _isFile: isFile,
           })
           edges.push({ source: lv2.id, target: lv3.id,
-            lineStyle: { color: 'rgba(100,160,220,0.15)', width: 0.6, type: 'dashed' } })
+            lineStyle: { color: `rgba(${isFile ? '255,107,138' : '255,181,71'},0.2)`, width: 0.6, type: 'dashed' } })
         })
       }
     })
@@ -222,7 +225,7 @@ function buildOption() {
     animationDuration: 300,
     series: [{
       type: 'graph',
-      layout: 'none',       // 完全固定坐标，不用力导向
+      layout: 'none',
       data:  nodes,
       links: edges,
       roam:      true,
@@ -270,7 +273,6 @@ function initChart() {
     const node = params.data
     const id   = node.id
 
-    // 点击二级节点：切换三级展开
     if (node._level === 2 && node._hasChildren) {
       expandedLv2.value = expandedLv2.value === id ? null : id
     }
@@ -303,6 +305,4 @@ onMounted(async () => {
   window.addEventListener('resize', handler)
   onBeforeUnmount(() => { chart?.dispose(); window.removeEventListener('resize', handler) })
 })
-
-const typeEntries = Object.entries(DV_TYPE_LABEL)
 </script>
