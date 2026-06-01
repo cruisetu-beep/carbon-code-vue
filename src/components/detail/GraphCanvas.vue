@@ -57,9 +57,13 @@ const zoomLevel = ref(1)
 const nodeCount = ref(0)
 const edgeCount = ref(0)
 
+// 记录已稳定的节点坐标（id -> {x, y}），切换选中时复用
+let frozenPositions = {}
+
 const SIZE = { building: 30, subsystem: 18, group: 12, doc: 11, chunk: 8, standard: 10, device: 8 }
 
-function buildEchartsData() {
+// ── 构建节点/边数据 ───────────────────────────────────────────
+function buildEchartsData(useFrozen = false) {
   const { nodes: rawNodes, edges: rawEdges } = dvBuildGraph(
     props.detail, props.expandedSubsystem, props.expandedDoc,
   )
@@ -68,8 +72,6 @@ function buildEchartsData() {
 
   const w  = chartEl.value?.clientWidth  || 600
   const h  = chartEl.value?.clientHeight || 400
-  const cx = w / 2
-  const cy = h / 2
 
   const ecNodes = rawNodes.map(n => {
     const isBuilding = n.type === 'building'
@@ -77,15 +79,19 @@ function buildEchartsData() {
     const color = n.color || DV_COLORS[n.type] || '#4dc9ff'
     const size  = SIZE[n.type] || 10
 
+    // 优先使用冻结坐标，保持节点位置不变
+    const frozen = frozenPositions[n.id]
+    const fx = isBuilding ? w / 2 : (useFrozen && frozen ? frozen.x : undefined)
+    const fy = isBuilding ? h / 2 : (useFrozen && frozen ? frozen.y : undefined)
+
     return {
-      id:   n.id,
-      name: n.name,
-      fixed:      isBuilding,
-      x:          isBuilding ? cx : undefined,
-      y:          isBuilding ? cy : undefined,
+      id:         n.id,
+      name:       n.name,
+      fixed:      isBuilding || (useFrozen && !!frozen),
+      x:          fx,
+      y:          fy,
       symbolSize: isSelected ? size * 1.6 : size,
-      // cursor 让节点 hover 时显示手型
-      cursor: 'pointer',
+      cursor:     'pointer',
       itemStyle: {
         color,
         borderColor: isSelected ? '#fff' : color,
@@ -103,7 +109,7 @@ function buildEchartsData() {
         textBorderColor: 'rgba(0,0,0,0.5)',
         textBorderWidth: 2,
       },
-      _type: n.type,
+      _type:    n.type,
       _apiType: n._apiType,
     }
   })
@@ -121,13 +127,13 @@ function buildEchartsData() {
   return { ecNodes, ecEdges }
 }
 
-function buildOption() {
-  const { ecNodes, ecEdges } = buildEchartsData()
+function buildOption(useFrozen = false) {
+  const { ecNodes, ecEdges } = buildEchartsData(useFrozen)
   const w = chartEl.value?.clientWidth  || 600
   const h = chartEl.value?.clientHeight || 400
   return {
     backgroundColor: 'transparent',
-    animationDuration: 600,
+    animationDuration: 400,
     animationEasingUpdate: 'quinticInOut',
     series: [{
       type: 'graph', layout: 'force',
@@ -146,51 +152,63 @@ function buildOption() {
   }
 }
 
-// ── 点击节点后居中：等力导向稳定再取坐标 ─────────────────────
+// ── 冻结当前所有节点坐标 ──────────────────────────────────────
+function freezePositions() {
+  if (!chart) return
+  const opt = chart.getOption()
+  const data = opt?.series?.[0]?.data || []
+  data.forEach(n => {
+    if (n.x != null && n.y != null) {
+      frozenPositions[n.id] = { x: n.x, y: n.y }
+    }
+  })
+}
+
+// ── 点击后居中节点 ────────────────────────────────────────────
 function centerNode(nodeId) {
   if (!chart) return
-
-  // 每隔 50ms 轮询节点像素坐标，最多等 800ms
   let attempts = 0
-  const maxAttempts = 16
   const tryCenter = () => {
     attempts++
     const px = chart.convertToPixel({ seriesIndex: 0 }, { graphNodeId: nodeId })
-    if (px && px[0] !== 0 && px[1] !== 0) {
+    if (px && (px[0] !== 0 || px[1] !== 0)) {
       const w  = chartEl.value?.clientWidth  || 600
       const h  = chartEl.value?.clientHeight || 400
-      const dx = w / 2 - px[0]
-      const dy = h / 2 - px[1]
-      chart.dispatchAction({ type: 'graphRoam', dx, dy })
-    } else if (attempts < maxAttempts) {
+      chart.dispatchAction({ type: 'graphRoam', dx: w / 2 - px[0], dy: h / 2 - px[1] })
+    } else if (attempts < 16) {
       setTimeout(tryCenter, 50)
     }
   }
   setTimeout(tryCenter, 50)
 }
 
+// ── 初始化 ────────────────────────────────────────────────────
 function initChart() {
   if (!chartEl.value) return
+  frozenPositions = {}
   chart = echarts.init(chartEl.value, null, { renderer: 'canvas' })
-  chart.setOption(buildOption())
 
-  // hover 节点时鼠标变手型（canvas 模式需要手动设置容器 cursor）
-  chart.on('mouseover', 'series.graph', (params) => {
-    if (params.dataType === 'node') {
-      chartEl.value.style.cursor = 'pointer'
-    }
+  // 首次布局：不使用冻结坐标，让力导向自由排列
+  chart.setOption(buildOption(false))
+
+  // 力导向布局结束后冻结坐标
+  chart.on('layoutfinished', () => {
+    freezePositions()
   })
-  chart.on('mouseout', 'series.graph', (params) => {
-    if (params.dataType === 'node') {
-      chartEl.value.style.cursor = 'default'
-    }
+  // 备用：500ms 后强制冻结（部分情况 layoutfinished 不触发）
+  setTimeout(() => { if (Object.keys(frozenPositions).length === 0) freezePositions() }, 600)
+
+  chart.on('mouseover', 'series.graph', (p) => {
+    if (p.dataType === 'node') chartEl.value.style.cursor = 'pointer'
+  })
+  chart.on('mouseout', 'series.graph', (p) => {
+    if (p.dataType === 'node') chartEl.value.style.cursor = 'default'
   })
 
   chart.on('click', 'series.graph', (params) => {
     if (params.dataType !== 'node') return
-    const id = params.data.id
-    emit('selectNode', id)
-    centerNode(id)
+    emit('selectNode', params.data.id)
+    centerNode(params.data.id)
   })
 
   chart.on('graphroam', () => {
@@ -202,13 +220,32 @@ function initChart() {
 function zoomIn()  { chart?.dispatchAction({ type: 'graphRoam', zoom: 1.2 }); zoomLevel.value = +(zoomLevel.value * 1.2).toFixed(2) }
 function zoomOut() { chart?.dispatchAction({ type: 'graphRoam', zoom: 0.8 }); zoomLevel.value = +(zoomLevel.value * 0.8).toFixed(2) }
 function resetView() {
+  frozenPositions = {}
   zoomLevel.value = 1
-  chart?.setOption(buildOption(), { replaceMerge: ['series'] })
+  chart?.setOption(buildOption(false), { replaceMerge: ['series'] })
+  setTimeout(() => freezePositions(), 600)
 }
 
+// ── 选中/展开变化时：使用冻结坐标更新，不重新布局 ──────────
 watch(
-  () => [props.detail, props.expandedSubsystem, props.expandedDoc, props.selectedId],
-  () => { if (chart) chart.setOption(buildOption(), { replaceMerge: ['series'] }) },
+  () => [props.selectedId],
+  () => {
+    if (!chart) return
+    // 仅更新节点样式，坐标用冻结值，节点不动
+    chart.setOption(buildOption(true), { replaceMerge: ['series'] })
+  },
+  { deep: false }
+)
+
+// detail / expandedSubsystem / expandedDoc 变化时需要重新布局（节点数量变了）
+watch(
+  () => [props.detail, props.expandedSubsystem, props.expandedDoc],
+  () => {
+    if (!chart) return
+    frozenPositions = {}
+    chart.setOption(buildOption(false), { replaceMerge: ['series'] })
+    setTimeout(() => freezePositions(), 600)
+  },
   { deep: false }
 )
 
