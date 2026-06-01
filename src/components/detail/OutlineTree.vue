@@ -7,75 +7,60 @@
 
     <!-- 建筑根节点 -->
     <TreeNode
-      :nodeId="'building'" type="building"
-      :name="detail._buildName || detail._raw?.resourceName || pkg.name" :selectedId="selectedId"
+      nodeId="building" type="building"
+      :name="detail._buildName || detail._raw?.resourceName || pkg.name"
+      :selectedId="selectedId"
       :defaultOpen="true"
       @select="$emit('select', $event)"
     >
-      <!-- 子系统 -->
-      <TreeNode
-        v-for="s in detail.subsystems" :key="s.id"
-        :nodeId="s.id" type="subsystem"
-        :name="s.name" :count="s.stats?.[0]?.v || ''"
-        :selectedId="selectedId"
-        @select="$emit('select', $event)"
-      >
-        <!-- 设备组 -->
+      <!-- 一级节点：直接来自接口 _rootNode.children，过滤掉 aiSummary -->
+      <template v-if="rootChildren.length">
         <TreeNode
-          v-for="g in groupsOf(s)" :key="g.id"
-          :nodeId="g.id" type="group"
-          :name="g.name" :selectedId="selectedId"
-          @select="$emit('select', $event)"
-        >
-          <!-- 设备 -->
-          <TreeNode
-            v-for="devId in g.devices || []" :key="devId"
-            :nodeId="devId" type="device"
-            :name="detail.devices?.[devId]?.name || devId"
-            :selectedId="selectedId"
-            @select="$emit('select', $event)"
-          />
-        </TreeNode>
-
-        <!-- 文档 -->
-        <TreeNode
-          v-for="d in docsOf(s)" :key="d.id"
-          :nodeId="d.id" type="doc"
-          :name="d.name" :count="`${(d.chunks||[]).length}片`"
+          v-for="lv1 in rootChildren" :key="lv1.id"
+          :nodeId="lv1.id" type="subsystem"
+          :name="lv1.name"
           :selectedId="selectedId"
           @select="$emit('select', $event)"
         >
-          <!-- 切片（最多6条） -->
+          <!-- 二级节点：过滤掉 aiSummary -->
           <TreeNode
-            v-for="cid in (d.chunks||[]).slice(0,6)" :key="cid"
-            :nodeId="cid" type="chunk"
-            :name="`#${detail.chunks?.[cid]?.idx} ${detail.chunks?.[cid]?.tags?.[0] || ''}`"
+            v-for="lv2 in childrenOf(lv1)" :key="lv2.id"
+            :nodeId="lv2.id"
+            :type="nodeType(lv2)"
+            :name="lv2.name"
+            :count="countOf(lv2)"
             :selectedId="selectedId"
             @select="$emit('select', $event)"
-          />
+          >
+            <!-- 三级节点：文件节点 -->
+            <TreeNode
+              v-for="lv3 in childrenOf(lv2)" :key="lv3.id"
+              :nodeId="lv3.id"
+              type="doc"
+              :name="lv3.name"
+              :selectedId="selectedId"
+              @select="$emit('select', $event)"
+            />
+          </TreeNode>
         </TreeNode>
-      </TreeNode>
+      </template>
 
-      <!-- 适用标准 -->
-      <TreeNode
-        v-if="detail.standards?.length"
-        nodeId="standards" type="subsystem"
-        name="适用标准" :count="`${detail.standards.length}项`"
-        :selectedId="selectedId"
-        @select="$emit('select', $event)"
-      >
+      <!-- 降级：如果接口节点为空，退回到 subsystems 列表 -->
+      <template v-else>
         <TreeNode
-          v-for="st in detail.standards" :key="st.id"
-          :nodeId="st.id" type="standard"
-          :name="st.name" :selectedId="selectedId"
+          v-for="s in detail.subsystems" :key="s.id"
+          :nodeId="s.id" type="subsystem"
+          :name="s.name"
+          :selectedId="selectedId"
           @select="$emit('select', $event)"
         />
-      </TreeNode>
+      </template>
     </TreeNode>
   </div>
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import AppIcon  from '../shared/AppIcon.vue'
 import TreeNode from './TreeNode.vue'
 
@@ -86,13 +71,38 @@ const props = defineProps({
 })
 defineEmits(['select'])
 
-const groupsOf = (s) =>
-  (s.groups || [])
-    .map(gid => ({ id: gid, ...props.detail.groups?.[gid] }))
-    .filter(g => g.name)
+// 一级节点列表（过滤掉 aiSummary 和 root 类型）
+const rootChildren = computed(() => {
+  const nodes = props.detail._rootNode?.children || []
+  return nodes.filter(n => n.type !== 'aiSummary')
+})
 
-const docsOf = (s) =>
-  (s.docs || [])
-    .map(did => ({ id: did, ...props.detail.docs?.[did] }))
-    .filter(d => d.name)
+// 获取子节点，过滤掉 aiSummary
+const childrenOf = (node) =>
+  (node.children || []).filter(n => n.type !== 'aiSummary')
+
+// 节点类型映射
+const nodeType = (node) => {
+  if (node.type === 'file') return 'doc'
+  if (node.type === 'data' || node.type === 'dataQuantity') return 'chunk'
+  if (node.levelType === '文件节点') return 'doc'
+  return 'group'
+}
+
+// 数量标注
+const countOf = (node) => {
+  if (node.type === 'file') {
+    const cnt = Array.isArray(node.data) ? node.data.length : 0
+    return cnt > 0 ? `${cnt}份` : ''
+  }
+  if (node.type === 'modelConfig') {
+    const cnt = Array.isArray(node.data) ? node.data.length : 0
+    return cnt > 0 ? `${cnt}条` : ''
+  }
+  if (node.type === 'data') {
+    const cnt = Array.isArray(node.data) ? node.data.length : 0
+    return cnt > 0 ? `${cnt}条` : ''
+  }
+  return ''
+}
 </script>
