@@ -137,9 +137,9 @@ function buildOption() {
       focusNodeAdjacency: true,
       force: {
         repulsion: [200, 400], gravity: 0.08,
-        edgeLength: [80, 180], layoutAnimation: true,
+        edgeLength: [80, 180], layoutAnimation: false,
       },
-      lineStyle: { curveness: 0.1 },
+      lineStyle: { curveness: 0 },
       emphasis: { focus: 'adjacency', lineStyle: { width: 2 } },
       selectedMode: 'single',
     }],
