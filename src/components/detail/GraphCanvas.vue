@@ -40,7 +40,6 @@ import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import * as echarts from 'echarts'
 import AppIcon from '../shared/AppIcon.vue'
 import { DV_COLORS, DV_TYPE_LABEL } from '../../data/constants.js'
-import { dvBuildGraph } from '../../utils/buildGraph.js'
 
 const props = defineProps({
   detail:            { type: Object, required: true },
@@ -57,198 +56,227 @@ const zoomLevel = ref(1)
 const nodeCount = ref(0)
 const edgeCount = ref(0)
 
-// 已冻结的节点坐标 id -> {x, y}
-let frozenPositions = {}
-// 当前是否已完成冻结
-let layoutFrozen = false
+// 当前展开的二级节点 id（展示三级节点）
+const expandedLv2 = ref(null)
 
-const SIZE = { building: 30, subsystem: 18, group: 12, doc: 11, chunk: 8, standard: 10, device: 8 }
+const SIZE = { building: 30, subsystem: 16, group: 11, doc: 9, chunk: 8 }
 
-// ── 读取 ECharts 内部当前节点坐标并写入 frozenPositions ───────
-function snapshotPositions() {
-  if (!chart) return
-  const opt = chart.getOption()
-  const data = opt?.series?.[0]?.data || []
-  let allValid = true
-  data.forEach(n => {
-    if (n.x != null && n.y != null && !(n.x === 0 && n.y === 0)) {
-      frozenPositions[n.id] = { x: n.x, y: n.y }
-    } else {
-      allValid = false
-    }
+const SUB_COLORS = {
+  subEnergy: '#4dc9ff', greenBuild: '#2bd9a8', virtualDaynamo: '#7a5cff',
+  savingRenovation: '#2bd9a8', energyAudit: '#4dc9ff', benchmark: '#a799ff',
+  effictImprove: '#ff8a47', energyUnit: '#4dc9ff', solar: '#ff8a47',
+  charge: '#ffb547', carbonQR: '#2bd9a8', certificateGlectricity: '#2bd9a8',
+  blueprint: '#a799ff', others: '#888',
+}
+
+function lv2Type(n) {
+  if (n.type === 'file') return 'doc'
+  if (n.type === 'data' || n.type === 'dataQuantity') return 'chunk'
+  return 'group'
+}
+
+// ── 固定环形布局，坐标完全由计算决定，不用力导向 ────────────
+function buildGraphData() {
+  const rootNode = props.detail._rootNode
+  if (!rootNode) return { nodes: [], edges: [] }
+
+  const w  = chartEl.value?.clientWidth  || 700
+  const h  = chartEl.value?.clientHeight || 450
+  const cx = w / 2
+  const cy = h / 2
+
+  const nodes = []
+  const edges = []
+
+  // L0 建筑根节点
+  nodes.push({
+    id: 'building', name: '建筑',
+    x: cx, y: cy, fixed: true,
+    symbolSize: SIZE.building,
+    cursor: 'pointer',
+    itemStyle: { color: '#4dc9ff', shadowBlur: 20, shadowColor: '#4dc9ff' },
+    label: { show: true, position: 'inside', formatter: '建筑',
+             fontSize: 13, fontWeight: 'bold', color: '#fff',
+             textBorderColor: 'transparent' },
+    _level: 0,
   })
-  return allValid && data.length > 0
-}
 
-// ── 轮询等待坐标稳定，然后冻结 ───────────────────────────────
-function waitAndFreeze(maxMs = 2000) {
-  layoutFrozen = false
-  frozenPositions = {}
-  const interval = 100
-  let elapsed = 0
-  let prevSnapshot = ''
+  // L1 一级节点：均匀分布在第一圈
+  const lv1List = (rootNode.children || []).filter(n => n.type !== 'aiSummary')
+  const R1 = Math.min(w, h) * 0.30
+  const angleStep1 = (Math.PI * 2) / Math.max(lv1List.length, 1)
 
-  const tick = () => {
-    elapsed += interval
-    snapshotPositions()
-    const snap = JSON.stringify(frozenPositions)
+  lv1List.forEach((lv1, i) => {
+    const ang = -Math.PI / 2 + i * angleStep1
+    const x   = cx + Math.cos(ang) * R1
+    const y   = cy + Math.sin(ang) * R1
+    const color = SUB_COLORS[lv1.type] || '#4dc9ff'
+    const isSel = lv1.id === props.selectedId
 
-    if (snap === prevSnapshot && snap !== '{}') {
-      // 坐标稳定了，冻结
-      layoutFrozen = true
-      applyFrozenPositions()
-      return
-    }
-    prevSnapshot = snap
-
-    if (elapsed < maxMs) setTimeout(tick, interval)
-    else {
-      layoutFrozen = true
-      applyFrozenPositions()
-    }
-  }
-  setTimeout(tick, interval)
-}
-
-// ── 把冻结坐标写回 ECharts，让所有节点 fixed ─────────────────
-function applyFrozenPositions() {
-  if (!chart || !layoutFrozen) return
-  const opt = chart.getOption()
-  const data = opt?.series?.[0]?.data || []
-  const newData = data.map(n => {
-    const pos = frozenPositions[n.id]
-    if (!pos) return n
-    return { ...n, fixed: true, x: pos.x, y: pos.y }
-  })
-  chart.setOption({ series: [{ data: newData }] })
-}
-
-// ── 构建初始 option（不带冻结坐标，自由布局）─────────────────
-function buildRawOption() {
-  const { nodes: rawNodes, edges: rawEdges } = dvBuildGraph(
-    props.detail, props.expandedSubsystem, props.expandedDoc,
-  )
-  nodeCount.value = rawNodes.length
-  edgeCount.value = rawEdges.length
-
-  const w = chartEl.value?.clientWidth  || 600
-  const h = chartEl.value?.clientHeight || 400
-
-  const ecNodes = rawNodes.map(n => {
-    const isBuilding = n.type === 'building'
-    const color = n.color || DV_COLORS[n.type] || '#4dc9ff'
-    const size  = SIZE[n.type] || 10
-    return {
-      id:   n.id, name: n.name,
-      fixed: isBuilding,
-      x: isBuilding ? w / 2 : undefined,
-      y: isBuilding ? h / 2 : undefined,
-      symbolSize: size, cursor: 'pointer',
-      itemStyle: { color, shadowBlur: isBuilding ? 20 : 5, shadowColor: color },
-      label: {
-        show:      n.type === 'subsystem' || isBuilding,
-        position:  isBuilding ? 'inside' : 'bottom',
-        formatter: isBuilding ? '建筑' : (n.name.length > 8 ? n.name.slice(0,7)+'…' : n.name),
-        fontSize:  isBuilding ? 13 : 11,
-        fontWeight: isBuilding ? 'bold' : 'normal',
-        color: '#e8f0fe',
-        textBorderColor: 'rgba(0,0,0,0.5)',
-        textBorderWidth: 2,
+    nodes.push({
+      id: lv1.id, name: lv1.name,
+      x, y, fixed: true,
+      symbolSize: isSel ? SIZE.subsystem * 1.5 : SIZE.subsystem,
+      cursor: 'pointer',
+      itemStyle: {
+        color,
+        borderColor: isSel ? '#fff' : color,
+        borderWidth: isSel ? 2 : 0,
+        shadowBlur: isSel ? 14 : 6,
+        shadowColor: color,
       },
-      _type: n.type, _apiType: n._apiType,
-    }
+      label: {
+        show: true, position: 'bottom',
+        formatter: lv1.name.length > 6 ? lv1.name.slice(0,5)+'…' : lv1.name,
+        fontSize: 11, color: '#e8f0fe',
+        textBorderColor: 'rgba(0,0,0,0.6)', textBorderWidth: 2,
+      },
+      _level: 1, _angle: ang, _color: color, _lv1id: lv1.id,
+    })
+    edges.push({ source: 'building', target: lv1.id,
+      lineStyle: { color: 'rgba(100,160,220,0.3)', width: 1.2 } })
+
+    // L2 二级节点：扇形分布在第二圈
+    const lv2List = (lv1.children || []).filter(n => n.type !== 'aiSummary')
+    const R2 = R1 + Math.min(w, h) * 0.20
+    const fanSpan = Math.min(Math.PI * 0.7, Math.max(0.4, lv2List.length * 0.22))
+    const fanStart = ang - fanSpan / 2
+
+    lv2List.forEach((lv2, j) => {
+      const a  = lv2List.length === 1 ? ang : fanStart + (fanSpan / (lv2List.length - 1)) * j
+      const lx = cx + Math.cos(a) * R2
+      const ly = cy + Math.sin(a) * R2
+      const t  = lv2Type(lv2)
+      const lv2Sel = lv2.id === props.selectedId
+
+      nodes.push({
+        id: lv2.id, name: lv2.name,
+        x: lx, y: ly, fixed: true,
+        symbolSize: lv2Sel ? SIZE.group * 1.5 : SIZE.group,
+        cursor: 'pointer',
+        itemStyle: {
+          color,
+          borderColor: lv2Sel ? '#fff' : color,
+          borderWidth: lv2Sel ? 2 : 0,
+          shadowBlur: lv2Sel ? 12 : 3,
+          shadowColor: color, opacity: 0.85,
+        },
+        label: {
+          show: lv2Sel,
+          position: 'bottom',
+          formatter: lv2.name.length > 6 ? lv2.name.slice(0,5)+'…' : lv2.name,
+          fontSize: 10, color: '#e8f0fe',
+          textBorderColor: 'rgba(0,0,0,0.6)', textBorderWidth: 2,
+        },
+        _level: 2, _type2: t, _angle: a, _color: color, _lv1id: lv1.id,
+        _hasChildren: (lv2.children || []).filter(n => n.type !== 'aiSummary').length > 0,
+      })
+      edges.push({ source: lv1.id, target: lv2.id,
+        lineStyle: { color: 'rgba(100,160,220,0.2)', width: 0.8,
+                     type: t === 'doc' ? 'dashed' : 'solid' } })
+
+      // L3 三级节点：仅当此二级节点被展开时显示
+      if (expandedLv2.value === lv2.id) {
+        const lv3List = (lv2.children || []).filter(n => n.type !== 'aiSummary')
+        const R3 = R2 + Math.min(w, h) * 0.14
+        const subSpan = Math.min(Math.PI * 0.4, Math.max(0.2, lv3List.length * 0.18))
+        const subStart = a - subSpan / 2
+
+        lv3List.forEach((lv3, k) => {
+          const sa = lv3List.length === 1 ? a : subStart + (subSpan / (lv3List.length - 1)) * k
+          nodes.push({
+            id: lv3.id, name: lv3.name,
+            x: cx + Math.cos(sa) * R3,
+            y: cy + Math.sin(sa) * R3,
+            fixed: true,
+            symbolSize: SIZE.doc,
+            cursor: 'pointer',
+            itemStyle: { color, shadowBlur: 3, shadowColor: color, opacity: 0.75 },
+            label: {
+              show: true, position: 'bottom',
+              formatter: lv3.name.length > 8 ? lv3.name.slice(0,7)+'…' : lv3.name,
+              fontSize: 10, color: '#e8f0fe',
+              textBorderColor: 'rgba(0,0,0,0.6)', textBorderWidth: 2,
+            },
+            _level: 3,
+          })
+          edges.push({ source: lv2.id, target: lv3.id,
+            lineStyle: { color: 'rgba(100,160,220,0.15)', width: 0.6, type: 'dashed' } })
+        })
+      }
+    })
   })
 
-  const ecEdges = rawEdges.map(e => ({
-    source: e.from, target: e.to,
-    lineStyle: {
-      color: 'rgba(100,160,220,0.35)',
-      width: e.kind === 'owns' ? 1.5 : 1,
-      type:  e.kind === 'describes' ? 'dashed' : 'solid',
-    },
-  }))
+  nodeCount.value = nodes.length
+  edgeCount.value = edges.length
+  return { nodes, edges }
+}
 
+function buildOption() {
+  const { nodes, edges } = buildGraphData()
+  const w = chartEl.value?.clientWidth  || 700
+  const h = chartEl.value?.clientHeight || 450
   return {
     backgroundColor: 'transparent',
+    animation: true,
     animationDuration: 300,
     series: [{
-      type: 'graph', layout: 'force',
-      data: ecNodes, links: ecEdges,
-      roam: true, draggable: true, zoom: 1,
+      type: 'graph',
+      layout: 'none',       // 完全固定坐标，不用力导向
+      data:  nodes,
+      links: edges,
+      roam:      true,
+      draggable: false,
+      zoom: 1,
       center: [w / 2, h / 2],
-      focusNodeAdjacency: true,
-      force: { repulsion: [200, 400], gravity: 0.08, edgeLength: [80, 180], layoutAnimation: false },
+      focusNodeAdjacency: false,
       lineStyle: { curveness: 0 },
-      emphasis: { focus: 'adjacency', lineStyle: { width: 2 } },
-      selectedMode: 'single',
+      emphasis: { disabled: false, focus: 'none' },
     }],
   }
 }
 
-// ── 仅更新节点高亮样式，坐标保持冻结不变 ─────────────────────
-function updateSelectionStyle(selectedId) {
-  if (!chart || !layoutFrozen) return
-  const opt = chart.getOption()
-  const data = opt?.series?.[0]?.data || []
-
-  const newData = data.map(n => {
-    const isBuilding = n._type === 'building' || n.id === 'building'
-    const isSelected = n.id === selectedId
-    const color = n.itemStyle?.color || '#4dc9ff'
-    const baseSize = SIZE[n._type] || SIZE[n.type] || 10
-    return {
-      ...n,
-      symbolSize: isSelected ? baseSize * 1.6 : baseSize,
-      itemStyle: {
-        ...n.itemStyle,
-        borderColor: isSelected ? '#fff' : color,
-        borderWidth: isSelected ? 2 : 0,
-        shadowBlur:  isBuilding ? 20 : isSelected ? 14 : 5,
-      },
-      label: {
-        ...n.label,
-        show:      n._type === 'subsystem' || isBuilding || isSelected,
-        fontWeight: isBuilding || isSelected ? 'bold' : 'normal',
-      },
-    }
-  })
-
-  chart.setOption({ series: [{ data: newData }] })
+function refreshChart() {
+  if (!chart) return
+  chart.setOption(buildOption(), { replaceMerge: ['series'] })
 }
 
-// ── 居中指定节点 ──────────────────────────────────────────────
 function centerNode(nodeId) {
   if (!chart) return
-  let attempts = 0
-  const tryCenter = () => {
-    attempts++
-    const px = chart.convertToPixel({ seriesIndex: 0 }, { graphNodeId: nodeId })
-    if (px && (Math.abs(px[0]) + Math.abs(px[1])) > 0) {
-      const w = chartEl.value?.clientWidth  || 600
-      const h = chartEl.value?.clientHeight || 400
-      chart.dispatchAction({ type: 'graphRoam', dx: w / 2 - px[0], dy: h / 2 - px[1] })
-    } else if (attempts < 16) {
-      setTimeout(tryCenter, 50)
-    }
-  }
-  setTimeout(tryCenter, 50)
+  const opt = chart.getOption()
+  const target = (opt?.series?.[0]?.data || []).find(n => n.id === nodeId)
+  if (!target || target.x == null) return
+  const px = chart.convertToPixel({ seriesIndex: 0 }, [target.x, target.y])
+  if (!px) return
+  const w = chartEl.value?.clientWidth  || 700
+  const h = chartEl.value?.clientHeight || 450
+  chart.dispatchAction({ type: 'graphRoam', dx: w / 2 - px[0], dy: h / 2 - px[1] })
 }
 
-// ── 初始化 ────────────────────────────────────────────────────
 function initChart() {
   if (!chartEl.value) return
   chart = echarts.init(chartEl.value, null, { renderer: 'canvas' })
-  chart.setOption(buildRawOption())
-  waitAndFreeze()
+  chart.setOption(buildOption())
 
-  chart.on('mouseover', 'series.graph', p => { if (p.dataType==='node') chartEl.value.style.cursor='pointer' })
-  chart.on('mouseout',  'series.graph', p => { if (p.dataType==='node') chartEl.value.style.cursor='default' })
+  chart.on('mouseover', 'series.graph', p => {
+    if (p.dataType === 'node') chartEl.value.style.cursor = 'pointer'
+  })
+  chart.on('mouseout', 'series.graph', p => {
+    if (p.dataType === 'node') chartEl.value.style.cursor = 'default'
+  })
 
   chart.on('click', 'series.graph', params => {
     if (params.dataType !== 'node') return
-    const id = params.data.id
+    const node = params.data
+    const id   = node.id
+
+    // 点击二级节点：切换三级展开
+    if (node._level === 2 && node._hasChildren) {
+      expandedLv2.value = expandedLv2.value === id ? null : id
+    }
+
     emit('selectNode', id)
-    centerNode(id)
+    setTimeout(() => centerNode(id), 50)
   })
 
   chart.on('graphroam', () => {
@@ -260,30 +288,18 @@ function initChart() {
 function zoomIn()  { chart?.dispatchAction({ type: 'graphRoam', zoom: 1.2 }); zoomLevel.value = +(zoomLevel.value * 1.2).toFixed(2) }
 function zoomOut() { chart?.dispatchAction({ type: 'graphRoam', zoom: 0.8 }); zoomLevel.value = +(zoomLevel.value * 0.8).toFixed(2) }
 function resetView() {
-  layoutFrozen = false; frozenPositions = {}; zoomLevel.value = 1
-  chart?.setOption(buildRawOption(), { replaceMerge: ['series'] })
-  waitAndFreeze()
+  expandedLv2.value = null
+  zoomLevel.value = 1
+  chart?.setOption(buildOption(), { replaceMerge: ['series'] })
 }
 
-// selectedId 变化 → 只改样式，不动坐标
-watch(() => props.selectedId, (id) => { updateSelectionStyle(id) })
-
-// 结构变化（展开/收起/切换建筑）→ 重新布局
-watch(
-  () => [props.detail, props.expandedSubsystem, props.expandedDoc],
-  () => {
-    if (!chart) return
-    layoutFrozen = false; frozenPositions = {}
-    chart.setOption(buildRawOption(), { replaceMerge: ['series'] })
-    waitAndFreeze()
-  },
-  { deep: false }
-)
+watch(() => [props.detail, props.expandedSubsystem, props.expandedDoc, props.selectedId, expandedLv2.value],
+  () => refreshChart(), { deep: false })
 
 onMounted(async () => {
   await nextTick()
   initChart()
-  const handler = () => chart?.resize()
+  const handler = () => { chart?.resize(); refreshChart() }
   window.addEventListener('resize', handler)
   onBeforeUnmount(() => { chart?.dispose(); window.removeEventListener('resize', handler) })
 })
