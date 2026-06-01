@@ -19,19 +19,16 @@
         <span class="dv-zoom-text" style="min-width:24px">{{ nodeCount }}</span>
         <span class="dv-toolbar-label" style="margin-left:4px">关系</span>
         <span class="dv-zoom-text" style="min-width:24px">{{ edgeCount }}</span>
-        <div class="dv-toolbar-divider"/>
-        <AppIcon name="sparkles" :size="10" stroke="#5a7499"/>
-        <span class="dv-toolbar-label" style="margin-right:0">拖拽平移 · 滚轮缩放</span>
+      </div>
+      <div class="dv-toolbar-divider"/>
+      <div class="dv-toolbar-group dv-toolbar-legend">
+        <span v-for="item in LEGEND_ITEMS" :key="item.key" class="dv-legend-item">
+          <span class="dv-legend-dot" :style="{ background: item.color }"/>{{ item.label }}
+        </span>
       </div>
     </div>
 
     <div ref="chartEl" class="dv-canvas-svg-wrap" style="width:100%;flex:1;min-height:0"/>
-
-    <div class="dv-canvas-legend">
-      <span v-for="item in LEGEND_ITEMS" :key="item.key" class="dv-legend-item">
-        <span class="dv-legend-dot" :style="{ background: item.color }"/>{{ item.label }}
-      </span>
-    </div>
   </div>
 </template>
 
@@ -73,7 +70,7 @@ const LEGEND_ITEMS = [
   { key: 'file', color: COLOR_FILE, label: '文件' },
 ]
 
-const SIZE = { building: 30, subsystem: 16, group: 11, doc: 9, chunk: 8 }
+const SIZE = { building: 30, subsystem: 22, group: 15, doc: 9, chunk: 8 }
 
 function isFileNode(node) {
   return node.levelType === '文件节点' || node.type === 'file'
@@ -92,6 +89,27 @@ function buildGraphData() {
   const nodes = []
   const edges = []
 
+  // 计算选中节点的直接子节点 id 集合，用于显示子节点 label
+  const selectedChildIds = new Set()
+  if (props.selectedId) {
+    const _allLv1 = (rootNode.children || []).filter(n => n.type !== 'aiSummary')
+    if (props.selectedId === 'building') {
+      _allLv1.forEach(c => selectedChildIds.add(c.id))
+    }
+    for (const _lv1 of _allLv1) {
+      if (_lv1.id === props.selectedId) {
+        ;(_lv1.children || []).filter(n => n.type !== 'aiSummary').forEach(c => selectedChildIds.add(c.id))
+        break
+      }
+      for (const _lv2 of (_lv1.children || []).filter(n => n.type !== 'aiSummary')) {
+        if (_lv2.id === props.selectedId) {
+          ;(_lv2.children || []).filter(n => n.type !== 'aiSummary').forEach(c => selectedChildIds.add(c.id))
+          break
+        }
+      }
+    }
+  }
+
   // L0 建筑根节点
   nodes.push({
     id: 'building', name: '建筑',
@@ -107,7 +125,7 @@ function buildGraphData() {
 
   // L1 一级节点：均匀分布在第一圈
   const lv1List = (rootNode.children || []).filter(n => n.type !== 'aiSummary')
-  const R1 = Math.min(w, h) * 0.30
+  const R1 = Math.min(w, h) * 0.24
   const angleStep1 = (Math.PI * 2) / Math.max(lv1List.length, 1)
 
   lv1List.forEach((lv1, i) => {
@@ -129,7 +147,7 @@ function buildGraphData() {
         shadowColor: COLOR_L1,
       },
       label: {
-        show: true, position: 'bottom',
+        show: isSel || selectedChildIds.has(lv1.id), position: 'bottom',
         formatter: lv1.name.length > 6 ? lv1.name.slice(0,5)+'…' : lv1.name,
         fontSize: 11, color: '#e8f0fe',
         textBorderColor: 'rgba(0,0,0,0.6)', textBorderWidth: 2,
@@ -141,7 +159,7 @@ function buildGraphData() {
 
     // L2 二级节点：扇形分布在第二圈
     const lv2List = (lv1.children || []).filter(n => n.type !== 'aiSummary')
-    const R2 = R1 + Math.min(w, h) * 0.20
+    const R2 = R1 + Math.min(w, h) * 0.16
     const fanSpan = Math.min(Math.PI * 0.7, Math.max(0.4, lv2List.length * 0.22))
     const fanStart = ang - fanSpan / 2
 
@@ -150,6 +168,7 @@ function buildGraphData() {
       const lx = cx + Math.cos(a) * R2
       const ly = cy + Math.sin(a) * R2
       const lv2Sel = lv2.id === props.selectedId
+      const lv2Color = (lv2.type === 'file') ? COLOR_FILE : COLOR_L2
 
       nodes.push({
         id: lv2.id, name: lv2.name,
@@ -157,14 +176,14 @@ function buildGraphData() {
         symbolSize: lv2Sel ? SIZE.group * 1.5 : SIZE.group,
         cursor: 'pointer',
         itemStyle: {
-          color: COLOR_L2,
-          borderColor: lv2Sel ? '#fff' : COLOR_L2,
+          color: lv2Color,
+          borderColor: lv2Sel ? '#fff' : lv2Color,
           borderWidth: lv2Sel ? 2 : 0,
           shadowBlur: lv2Sel ? 12 : 3,
-          shadowColor: COLOR_L2, opacity: 0.85,
+          shadowColor: lv2Color, opacity: 0.85,
         },
         label: {
-          show: lv2Sel,
+          show: lv2Sel || selectedChildIds.has(lv2.id),
           position: 'bottom',
           formatter: lv2.name.length > 6 ? lv2.name.slice(0,5)+'…' : lv2.name,
           fontSize: 10, color: '#e8f0fe',
@@ -179,7 +198,7 @@ function buildGraphData() {
       // L3 三级节点：仅当此二级节点被展开时显示
       if (expandedLv2.value === lv2.id) {
         const lv3List = (lv2.children || []).filter(n => n.type !== 'aiSummary')
-        const R3 = R2 + Math.min(w, h) * 0.14
+        const R3 = R2 + Math.min(w, h) * 0.12
         const subSpan = Math.min(Math.PI * 0.4, Math.max(0.2, lv3List.length * 0.18))
         const subStart = a - subSpan / 2
 
@@ -196,7 +215,7 @@ function buildGraphData() {
             cursor: 'pointer',
             itemStyle: { color: l3Color, shadowBlur: 3, shadowColor: l3Color, opacity: 0.85 },
             label: {
-              show: true, position: 'bottom',
+              show: selectedChildIds.has(lv3.id) || true, position: 'bottom',
               formatter: lv3.name.length > 8 ? lv3.name.slice(0,7)+'…' : lv3.name,
               fontSize: 10, color: '#e8f0fe',
               textBorderColor: 'rgba(0,0,0,0.6)', textBorderWidth: 2,
@@ -306,3 +325,4 @@ onMounted(async () => {
   onBeforeUnmount(() => { chart?.dispose(); window.removeEventListener('resize', handler) })
 })
 </script>
+
