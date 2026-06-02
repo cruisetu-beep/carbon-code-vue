@@ -70,7 +70,7 @@ const LEGEND_ITEMS = [
   { key: 'file', color: COLOR_FILE, label: '文件' },
 ]
 
-const SIZE = { building: 30, subsystem: 22, group: 15, doc: 9, chunk: 8 }
+const SIZE = { building: 42, subsystem: 22, group: 15, doc: 9, chunk: 8 }
 
 function isFileNode(node) {
   return node.levelType === '文件节点' || node.type === 'file'
