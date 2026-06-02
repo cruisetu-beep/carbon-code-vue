@@ -20,9 +20,8 @@
 
   <!-- 加载中 -->
   <div v-if="store.detailLoading && !detail" class="dv-loading-screen">
-    <div style="position:relative;width:72px;height:72px;flex-shrink:0">
-      <svg width="72" height="72" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg"
-           style="animation:spin 1.2s linear infinite;display:block">
+    <div class="dv-loading-ring">
+      <svg width="72" height="72" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="30" cy="30" r="26" stroke="rgba(77,201,255,0.15)" stroke-width="3"/>
         <circle cx="30" cy="30" r="26" stroke="#4dc9ff" stroke-width="3"
                 stroke-linecap="round" stroke-dasharray="60 104"/>
@@ -177,13 +176,18 @@ const carbonQRLabel = computed(() => {
 })
 </script>
 
-<style scoped>
+<style>
 .dv-loading-screen {
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   height: calc(100vh - 120px);
   gap: 20px;
 }
+.dv-loading-ring {
+  width: 72px; height: 72px; flex-shrink: 0;
+  animation: dv-spin 1.2s linear infinite;
+}
+.dv-loading-ring svg { display: block; }
 .dv-loading-text {
   font-size: 18px; font-weight: 600;
   color: var(--text-0); letter-spacing: 0.02em;
@@ -191,7 +195,7 @@ const carbonQRLabel = computed(() => {
 .dv-loading-sub {
   font-size: 13px; color: var(--text-2);
 }
-@keyframes spin {
+@keyframes dv-spin {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
 }
