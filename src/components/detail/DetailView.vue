@@ -1,5 +1,6 @@
 <template>
-  <div class="page-head">
+  <!-- 头部：只在数据就绪后显示 -->
+  <div v-if="detail" class="page-head">
     <div>
       <h1 class="page-title">
         <AppIcon name="cube" :size="22" stroke="var(--brand-2)"/>
@@ -18,10 +19,20 @@
   </div>
 
   <!-- 加载中 -->
-  <div v-if="store.detailLoading && !detail"
-       style="display:flex;align-items:center;justify-content:center;height:400px;gap:12px;color:var(--text-2)">
-    <AppIcon name="sparkles" :size="20" stroke="var(--brand)"/>
-    <span>知识库数据加载中…</span>
+  <div v-if="store.detailLoading && !detail" class="dv-loading-screen">
+    <div class="dv-loading-ring">
+      <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="30" cy="30" r="26" stroke="rgba(77,201,255,0.15)" stroke-width="3"/>
+        <circle cx="30" cy="30" r="26" stroke="#4dc9ff" stroke-width="3"
+                stroke-linecap="round" stroke-dasharray="60 104"
+                class="dv-loading-arc"/>
+      </svg>
+      <div class="dv-loading-icon">
+        <AppIcon name="sparkles" :size="22" stroke="#4dc9ff"/>
+      </div>
+    </div>
+    <div class="dv-loading-text">知识库数据加载中…</div>
+    <div class="dv-loading-sub">正在解析建筑知识图谱，请稍候</div>
   </div>
 
   <!-- 加载失败 -->
