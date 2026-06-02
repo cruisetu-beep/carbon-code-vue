@@ -52,6 +52,20 @@ const zoomLevel = ref(1)
 const nodeCount = ref(0)
 const edgeCount = ref(0)
 
+// 固定统计：L0(1) + L1 + L2，不随展开变化
+function calcFixedCounts() {
+  const rootNode = props.detail?._rootNode
+  if (!rootNode) { nodeCount.value = 0; edgeCount.value = 0; return }
+  const lv1List = (rootNode.children || []).filter(n => n.type !== 'aiSummary')
+  let lv2Count = 0
+  for (const lv1 of lv1List) {
+    lv2Count += (lv1.children || []).filter(n => n.type !== 'aiSummary').length
+  }
+  const total = 1 + lv1List.length + lv2Count
+  nodeCount.value = total
+  edgeCount.value = total - 1
+}
+
 // 当前展开的二级节点 id（展示三级节点）
 const expandedLv2 = ref(null)
 
@@ -233,8 +247,8 @@ function buildGraphData() {
     })
   })
 
-  nodeCount.value = nodes.length
-  edgeCount.value = edges.length
+  nodeCount.value = 0  // 由 calcFixedCounts 统一管理
+  edgeCount.value = 0
   return { nodes, edges }
 }
 
@@ -281,6 +295,7 @@ function centerNode(nodeId) {
 
 function initChart() {
   if (!chartEl.value) return
+  calcFixedCounts()
   chart = echarts.init(chartEl.value, null, { renderer: 'canvas' })
   chart.setOption(buildOption())
 
@@ -319,7 +334,7 @@ function resetView() {
 }
 
 watch(() => [props.detail, props.expandedSubsystem, props.expandedDoc, props.selectedId, expandedLv2.value],
-  () => refreshChart(), { deep: false })
+  () => { calcFixedCounts(); refreshChart() }, { deep: false })
 
 onMounted(async () => {
   await nextTick()
