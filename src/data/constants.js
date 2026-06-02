@@ -5,11 +5,11 @@
 export const DV_COLORS = {
   building: "#4dc9ff",
   subsystem: "#2bd9a8",
-  group: "#5fd0c0",
+  group: "#a799ff",
   device: "#a799ff",
   metric: "#ffb547",
   doc: "#ff6b8a",
-  chunk: "#ffd4dc",
+  chunk: "#a799ff",
   standard: "#ff8a47",
 };
 
