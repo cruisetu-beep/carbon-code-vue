@@ -332,7 +332,10 @@ function resetView() {
   chart?.setOption(buildOption(), { replaceMerge: ['series'] })
 }
 
-watch(() => props.detail, () => { calcFixedCounts(); refreshChart() }, { deep: true, immediate: true })
+watch(() => props.detail?._rootNode, (val) => {
+  if (val) calcFixedCounts()
+}, { immediate: true })
+watch(() => props.detail, () => { refreshChart() }, { deep: true })
 watch(() => [props.expandedSubsystem, props.expandedDoc, props.selectedId, expandedLv2.value],
   () => refreshChart())
 
