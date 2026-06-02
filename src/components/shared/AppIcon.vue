@@ -95,6 +95,11 @@
       <path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/>
       <path d="M7 12h10"/>
     </template>
+    <!-- refresh -->
+    <template v-else-if="name === 'refresh'">
+      <path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5"/>
+      <path d="M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5"/>
+    </template>
     <!-- database -->
     <template v-else-if="name === 'database'">
       <ellipse cx="12" cy="5" rx="8" ry="3"/>
