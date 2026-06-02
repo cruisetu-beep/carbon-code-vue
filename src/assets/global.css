@@ -438,6 +438,73 @@
   border: 1px solid var(--line);
   border-radius: 6px;
 }
+
+/* ── BuildingPanel 状态卡片 ───────────────────────────────── */
+.bp-status-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 8px; margin-bottom: 16px;
+}
+.bp-status-card {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  transition: all 150ms;
+}
+.bp-status-ok   { background: rgba(43,217,168,0.07);  border-color: rgba(43,217,168,0.2); }
+.bp-status-warn { background: rgba(255,181,71,0.07);  border-color: rgba(255,181,71,0.22); }
+.bp-status-info { background: rgba(167,153,255,0.07); border-color: rgba(167,153,255,0.22); }
+.bp-status-none { background: rgba(100,130,180,0.05); border-color: rgba(100,130,180,0.15); }
+.bp-status-icon {
+  width: 28px; height: 28px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.06);
+}
+.bp-status-body { min-width: 0; }
+.bp-status-title {
+  font-size: 10px; color: var(--text-2);
+  margin-bottom: 2px; white-space: nowrap;
+}
+.bp-status-val {
+  font-size: 12px; font-weight: 600; white-space: nowrap;
+}
+.bp-status-val.ok   { color: #2bd9a8; }
+.bp-status-val.warn { color: #ffb547; }
+.bp-status-val.info { color: #a799ff; }
+.bp-status-val.none { color: #7a9cc8; }
+
+/* ── BuildingPanel AI 总结 ───────────────────────────────── */
+.bp-ai-wrap {
+  border: 1px solid rgba(167,153,255,0.2);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.bp-ai-header {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 12px;
+  background: rgba(167,153,255,0.08);
+  border-bottom: 1px solid rgba(167,153,255,0.15);
+  font-size: 11px; color: #a799ff; font-weight: 600;
+}
+.bp-ai-progress {
+  margin-left: auto;
+  font-size: 10px; color: #7a9cc8;
+  font-family: "JetBrains Mono", monospace;
+}
+.bp-ai-body {
+  padding: 12px;
+  max-height: 320px;
+  overflow-y: auto;
+  font-size: 12.5px; line-height: 1.8;
+  color: var(--text-1);
+}
+.bp-ai-cursor {
+  display: inline-block;
+  color: #a799ff;
+  animation: blink 0.8s step-end infinite;
+}
+@keyframes blink { 0%,100%{opacity:1}
 .dv-mini-label {
   font-size: 10.5px;
   color: var(--text-2);
