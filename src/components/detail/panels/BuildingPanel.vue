@@ -9,23 +9,23 @@
     <div class="bp-status-grid">
       <!-- AI 解析 -->
       <div class="bp-status-card bp-status-ok">
-        <div class="bp-status-icon">
-          <AppIcon name="sparkles" :size="14" stroke="#2bd9a8"/>
+        <div class="bp-status-icon bp-status-icon-check">
+          <AppIcon name="check" :size="14" stroke="#fff"/>
         </div>
         <div class="bp-status-body">
           <div class="bp-status-title">AI 解析</div>
-          <div class="bp-status-val ok">已完成</div>
+          <div class="bp-status-val ok">✓ 已完成</div>
         </div>
       </div>
 
       <!-- 碳效码 -->
-      <div class="bp-status-card" :class="carbonQRInfo ? 'bp-status-ok' : 'bp-status-none'">
+      <div class="bp-status-card" :class="carbonQRInfo ? 'bp-status-gold' : 'bp-status-none'">
         <div class="bp-status-icon">
-          <AppIcon name="zap" :size="14" :stroke="carbonQRInfo ? '#4dc9ff' : '#8da3c8'"/>
+          <AppIcon name="zap" :size="14" :stroke="carbonQRInfo ? '#ffb547' : '#8da3c8'"/>
         </div>
         <div class="bp-status-body">
           <div class="bp-status-title">碳效码</div>
-          <div class="bp-status-val" :class="carbonQRInfo ? 'info' : 'none'">
+          <div class="bp-status-val" :class="carbonQRInfo ? 'gold' : 'none'">
             {{ carbonQRInfo || '暂无' }}
           </div>
         </div>
