@@ -6,10 +6,8 @@
       <h1 class="page-title">
         <AppIcon name="cube" :size="22" stroke="var(--brand-2)"/>
         {{ buildingName }}
-        <span class="dv-head-code">{{ pkg.code }}</span>
-        <span v-if="pkg.score && pkg.score !== '—'" class="dv-head-score">
-          碳效码 {{ pkg.score }} · {{ pkg.cls }}
-        </span>
+        <span class="dv-head-code">{{ buildId }}</span>
+        <span v-if="carbonQRLabel" class="dv-head-score">{{ carbonQRLabel }}</span>
       </h1>
       <div class="page-subtitle">
         知识库已完成全部资料的智能解析、切片与图谱融合。
@@ -149,4 +147,26 @@ const selectedNode = computed(() => {
 
 const buildingName = computed(() => detail.value?._buildName || detail.value?._raw?.resourceName || props.pkg.name)
 const crumbName = computed(() => selectedNode.value?.name || '建筑')
+
+// 建筑编号：取接口根节点 data.buildId
+const buildId = computed(() => {
+  const bid = detail.value?._rootNode?.data?.buildId
+  return bid || props.pkg.buildId || props.pkg.code
+})
+
+// 碳效码：找 type===carbonQR 的一级节点，取其 children[0].data[0]
+const carbonQRLabel = computed(() => {
+  const rootNode = detail.value?._rootNode
+  if (!rootNode) return ''
+  const carbonNode = (rootNode.children || []).find(
+    n => n.levelType === '一级节点' && n.type === 'carbonQR'
+  )
+  if (!carbonNode) return ''
+  const baseInfoChild = (carbonNode.children || []).find(c => c.type === 'baseInfo')
+  if (!baseInfoChild) return ''
+  const dataArr = Array.isArray(baseInfoChild.data) ? baseInfoChild.data : []
+  if (!dataArr.length) return ''
+  const d = dataArr[0]
+  return `${d.year} 碳效码 ${d.evaluationCode}`
+})
 </script>
