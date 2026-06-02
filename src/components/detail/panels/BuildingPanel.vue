@@ -76,7 +76,7 @@
 <script setup>
 import { ref, computed, watch, onBeforeUnmount } from 'vue'
 import PanelHeader   from '../shared/PanelHeader.vue'
-import AppIcon       from '../shared/AppIcon.vue'
+import AppIcon       from '../../shared/AppIcon.vue'
 import { DV_COLORS } from '../../../data/constants.js'
 
 const props = defineProps({
