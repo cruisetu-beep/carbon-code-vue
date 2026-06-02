@@ -504,7 +504,10 @@
   color: #a799ff;
   animation: blink 0.8s step-end infinite;
 }
-@keyframes blink { 0%,100%{opacity:1}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
 .dv-mini-label {
   font-size: 10.5px;
   color: var(--text-2);
