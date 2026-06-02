@@ -295,7 +295,6 @@ function centerNode(nodeId) {
 
 function initChart() {
   if (!chartEl.value) return
-  calcFixedCounts()
   chart = echarts.init(chartEl.value, null, { renderer: 'canvas' })
   chart.setOption(buildOption())
 
@@ -333,8 +332,9 @@ function resetView() {
   chart?.setOption(buildOption(), { replaceMerge: ['series'] })
 }
 
-watch(() => [props.detail, props.expandedSubsystem, props.expandedDoc, props.selectedId, expandedLv2.value],
-  () => { calcFixedCounts(); refreshChart() }, { deep: false })
+watch(() => props.detail, () => { calcFixedCounts(); refreshChart() }, { deep: true, immediate: true })
+watch(() => [props.expandedSubsystem, props.expandedDoc, props.selectedId, expandedLv2.value],
+  () => refreshChart())
 
 onMounted(async () => {
   await nextTick()
