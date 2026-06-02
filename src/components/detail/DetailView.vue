@@ -27,9 +27,6 @@
                 stroke-linecap="round" stroke-dasharray="60 104"
                 class="dv-loading-arc"/>
       </svg>
-      <div class="dv-loading-icon">
-        <AppIcon name="sparkles" :size="22" stroke="#4dc9ff"/>
-      </div>
     </div>
     <div class="dv-loading-text">知识库数据加载中…</div>
     <div class="dv-loading-sub">正在解析建筑知识图谱，请稍候</div>
