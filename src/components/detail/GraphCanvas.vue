@@ -112,14 +112,18 @@ function buildGraphData() {
 
   // L0 建筑根节点
   nodes.push({
-    id: 'building', name: '建筑',
+    id: 'building', name: rootNode.name || '建筑',
     x: cx, y: cy, fixed: true,
     symbolSize: SIZE.building,
     cursor: 'pointer',
     itemStyle: { color: COLOR_L0, shadowBlur: 20, shadowColor: COLOR_L0 },
-    label: { show: true, position: 'inside', formatter: '建筑',
-             fontSize: 13, fontWeight: 'bold', color: '#fff',
-             textBorderColor: 'transparent' },
+    label: {
+      show: true,
+      position: 'bottom',
+      formatter: rootNode.name || '建筑',
+      fontSize: 13, fontWeight: 'bold', color: '#e8f0fe',
+      textBorderColor: 'rgba(0,0,0,0.7)', textBorderWidth: 2,
+    },
     _level: 0,
   })
 
