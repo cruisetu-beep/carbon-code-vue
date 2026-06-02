@@ -19,13 +19,13 @@
       </div>
 
       <!-- 碳效码 -->
-      <div class="bp-status-card" :class="carbonQRInfo ? 'bp-status-gold' : 'bp-status-none'">
+      <div class="bp-status-card" :class="carbonQRInfo ? 'bp-status-ok' : 'bp-status-none'">
         <div class="bp-status-icon">
-          <AppIcon name="zap" :size="14" :stroke="carbonQRInfo ? '#ffb547' : '#8da3c8'"/>
+          <AppIcon name="zap" :size="14" :stroke="carbonQRInfo ? '#2bd9a8' : '#8da3c8'"/>
         </div>
         <div class="bp-status-body">
           <div class="bp-status-title">碳效码</div>
-          <div class="bp-status-val" :class="carbonQRInfo ? 'gold' : 'none'">
+          <div class="bp-status-val" :class="carbonQRInfo ? 'ok' : 'none'">
             {{ carbonQRInfo || '暂无' }}
           </div>
         </div>
