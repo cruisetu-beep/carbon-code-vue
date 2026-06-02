@@ -1,6 +1,4 @@
 <template>
-  <Breadcrumb :items="['首页', '资源包管理', pkg.name, crumbName]"/>
-
   <div class="page-head">
     <div>
       <h1 class="page-title">
