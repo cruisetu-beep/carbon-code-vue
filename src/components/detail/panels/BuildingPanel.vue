@@ -62,11 +62,11 @@
     <div class="bp-ai-wrap">
       <div class="bp-ai-header">
         <AppIcon name="sparkles" :size="11" stroke="#a799ff"/>
-        <span>AI 总结</span>
+        <span>AI 智能解析</span>
         <span v-if="typing" class="bp-ai-progress">{{ typingProgress }}%</span>
       </div>
       <div class="bp-ai-body" ref="aiBodyEl">
-        <span class="bp-ai-text">{{ displayText }}</span>
+        <span class="bp-ai-text" v-html="displayHtml"/>
         <span v-if="typing" class="bp-ai-cursor">|</span>
       </div>
     </div>
@@ -121,7 +121,14 @@ const fullText = computed(() => {
   return aiNode?.data || ''
 })
 
-// ── 打字机效果 ────────────────────────────────────────────────
+// ── Markdown 轻量渲染：**bold** → <strong>，\n → <br> ────────
+function renderMd(text) {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n/g, '<br>')
+}
+
+const displayHtml = computed(() => renderMd(displayText.value))
 const displayText    = ref('')
 const typing         = ref(false)
 const typingProgress = ref(0)
