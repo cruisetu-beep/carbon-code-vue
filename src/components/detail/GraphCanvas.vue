@@ -1,26 +1,28 @@
 <template>
   <div class="dv-canvas-wrap">
     <div class="dv-canvas-toolbar">
-      <div class="dv-toolbar-group">
-        <button class="dv-tool-btn" title="放大"  @click="zoomIn">
-          <AppIcon name="plus" :size="12"/>
-        </button>
-        <span class="dv-zoom-text">{{ Math.round(zoomLevel * 100) }}%</span>
-        <button class="dv-tool-btn" title="缩小"  @click="zoomOut">
-          <AppIcon name="chevron-down" :size="12"/>
-        </button>
-        <button class="dv-tool-btn" title="重置"  @click="resetView">
-          <AppIcon name="scan" :size="12"/>
-        </button>
+      <!-- 重置视图 -->
+      <button class="dv-tool-btn" title="重置视图" @click="resetView">
+        <AppIcon name="scan" :size="12"/>
+      </button>
+      <div class="dv-toolbar-divider"/>
+
+      <!-- 节点/关系数 badge -->
+      <div class="dv-stat-badge">
+        <AppIcon name="sparkles" :size="10" stroke="#4dc9ff"/>
+        <span class="dv-stat-item">
+          <span class="dv-stat-num">{{ nodeCount }}</span>
+          <span class="dv-stat-lbl">节点</span>
+        </span>
+        <span class="dv-stat-sep"/>
+        <span class="dv-stat-item">
+          <span class="dv-stat-num">{{ edgeCount }}</span>
+          <span class="dv-stat-lbl">关系</span>
+        </span>
       </div>
       <div class="dv-toolbar-divider"/>
-      <div class="dv-toolbar-group" style="gap:10px">
-        <span class="dv-toolbar-label">节点</span>
-        <span class="dv-zoom-text" style="min-width:24px">{{ nodeCount }}</span>
-        <span class="dv-toolbar-label" style="margin-left:4px">关系</span>
-        <span class="dv-zoom-text" style="min-width:24px">{{ edgeCount }}</span>
-      </div>
-      <div class="dv-toolbar-divider"/>
+
+      <!-- 图例 -->
       <div class="dv-toolbar-group dv-toolbar-legend">
         <span v-for="item in LEGEND_ITEMS" :key="item.key" class="dv-legend-item">
           <span class="dv-legend-dot" :style="{ background: item.color }"/>{{ item.label }}
