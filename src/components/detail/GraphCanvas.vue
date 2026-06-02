@@ -3,7 +3,7 @@
     <div class="dv-canvas-toolbar">
       <!-- 重置视图 -->
       <button class="dv-tool-btn" title="重置视图" @click="resetView">
-        <AppIcon name="scan" :size="12"/>
+        <AppIcon name="refresh" :size="12"/>
       </button>
       <div class="dv-toolbar-divider"/>
 
