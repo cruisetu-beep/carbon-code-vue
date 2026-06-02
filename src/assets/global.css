@@ -153,6 +153,7 @@
   z-index: 5;
 }
 .dv-toolbar-group { display: flex; align-items: center; gap: 4px; }
+.dv-toolbar-legend { margin-left: auto; }
 .dv-toolbar-divider {
   width: 1px; height: 20px;
   background: rgba(100,140,200,0.25);
