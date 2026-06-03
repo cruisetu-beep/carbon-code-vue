@@ -171,7 +171,7 @@ function buildGraphData() {
       _level: 1, _angle: ang, _lv1id: lv1.id,
     })
     edges.push({ source: 'building', target: lv1.id,
-      lineStyle: { color: 'rgba(43,217,168,0.25)', width: 1.2 } })
+      lineStyle: { color: 'rgba(43,217,168,0.55)', width: 2 } })
 
     // L2 二级节点：扇形分布在第二圈
     const lv2List = (lv1.children || []).filter(n => n.type !== 'aiSummary')
@@ -209,7 +209,7 @@ function buildGraphData() {
         _hasChildren: (lv2.children || []).filter(n => n.type !== 'aiSummary').length > 0,
       })
       edges.push({ source: lv1.id, target: lv2.id,
-        lineStyle: { color: 'rgba(167,153,255,0.25)', width: 0.8, type: 'solid' } })
+        lineStyle: { color: 'rgba(167,153,255,0.5)', width: 1.4, type: 'solid' } })
 
       // L3 三级节点：仅当此二级节点被展开时显示
       if (expandedLv2.value === lv2.id) {
@@ -239,7 +239,7 @@ function buildGraphData() {
             _level: 3, _isFile: isFile,
           })
           edges.push({ source: lv2.id, target: lv3.id,
-            lineStyle: { color: `rgba(${isFile ? '255,107,138' : '255,181,71'},0.2)`, width: 0.6, type: 'dashed' } })
+            lineStyle: { color: `rgba(${isFile ? '255,107,138' : '255,181,71'},0.45)`, width: 1.1, type: 'dashed' } })
         })
       }
     })
