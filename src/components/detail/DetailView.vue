@@ -171,12 +171,12 @@ const carbonQRLabel = computed(() => {
   if (!baseInfoChild) return ''
   const dataArr = Array.isArray(baseInfoChild.data) ? baseInfoChild.data : []
   if (!dataArr.length) return ''
-  // 过滤掉无效年份（year=1900），按 evaDate 降序取最新
+  // 过滤掉无效年份（year=1900），按 year 降序取最新
   const valid = dataArr
     .filter(d => d.evaluationCode && Number(d.year) > 1900)
-    .sort((a, b) => Number(b.evaDate) - Number(a.evaDate))
+    .sort((a, b) => Number(b.year) - Number(a.year))
   const d = valid[0] || dataArr[0]
-  return `${d.evaDate} 碳效码 ${d.evaluationCode}`
+  return `${d.year} 碳效码 ${d.evaluationCode}`
 })
 </script>
 
