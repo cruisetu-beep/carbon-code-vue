@@ -78,13 +78,13 @@
       </div>
     </template>
 
-    <AISummary :text="s.summary"/>
-
     <!-- 能耗监测图表（仅分项计量展示）-->
     <template v-if="isSubEnergy && energyData.length">
       <div class="dv-panel-section-title">能耗监测（近24h）</div>
       <EnergyChart :data="energyData" :unit="energyUnit" :color="color"/>
     </template>
+
+    <AISummary :text="s.summary"/>
 
     <template v-if="s.stats && s.stats.length">
       <div class="dv-panel-section-title">结构化字段</div>
