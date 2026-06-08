@@ -42,7 +42,7 @@
           </div>
           <div class="bp-status-body">
             <div class="bp-status-title">项目地址</div>
-            <div class="bp-status-val none">{{ buildInfo.address || '—' }}</div>
+            <div class="bp-status-val none si-address" :title="buildInfo.address">{{ buildInfo.address && buildInfo.address.length > 12 ? buildInfo.address.slice(0, 12) + '…' : (buildInfo.address || '—') }}</div>
           </div>
         </div>
       </div>

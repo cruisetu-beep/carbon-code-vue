@@ -2230,3 +2230,6 @@
 .si-three-col .bp-status-card { padding: 8px 6px; gap: 6px; }
 .si-three-col .bp-status-icon { width: 22px; height: 22px; min-width: 22px; }
 .si-three-col .bp-status-title { font-size: 10px; }
+
+/* 地址字段截断+tooltip */
+.si-address { cursor: default; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
