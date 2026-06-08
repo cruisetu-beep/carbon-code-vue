@@ -59,7 +59,7 @@ import { computed } from 'vue'
 import PanelHeader   from '../shared/PanelHeader.vue'
 import { DV_COLORS } from '../../../data/constants.js'
 
-const BASE_URL = 'https://www.ttbems.com/'
+const BASE_URL = 'blob:https://www.ttbems.com/'
 
 const props = defineProps({
   node:   { type: Object, required: true },
