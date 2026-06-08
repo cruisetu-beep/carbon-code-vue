@@ -491,7 +491,7 @@
 
 /* ── BuildingPanel AI 总结 ───────────────────────────────── */
 .bp-ai-wrap {
-  border: 1px solid rgba(167,153,255,0.2);
+  border: 1px solid rgba(77,201,255,0.2);
   border-radius: 8px;
   overflow: hidden;
   flex: 1;
@@ -502,9 +502,9 @@
 .bp-ai-header {
   display: flex; align-items: center; gap: 6px;
   padding: 8px 12px;
-  background: rgba(167,153,255,0.08);
-  border-bottom: 1px solid rgba(167,153,255,0.15);
-  font-size: 14px; color: #a799ff; font-weight: 600;
+  background: rgba(77,201,255,0.08);
+  border-bottom: 1px solid rgba(77,201,255,0.15);
+  font-size: 14px; color: #4dc9ff; font-weight: 600;
   flex-shrink: 0;
 }
 .bp-ai-progress {
@@ -521,7 +521,7 @@
 }
 .bp-ai-cursor {
   display: inline-block;
-  color: #a799ff;
+  color: #4dc9ff;
   animation: blink 0.8s step-end infinite;
 }
 @keyframes blink {
