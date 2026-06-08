@@ -71,7 +71,8 @@ export function dvBuildGraph(detail, expandedSubsystem, expandedDoc) {
     const color = SUB_COLORS[lv1.type] || '#4dc9ff'
 
     // 用 detail.subsystems 里已处理好的对象作 ref（含 icon/color），fallback 原始节点
-    const subRef = (detail.subsystems || []).find(s => s.id === lv1.id) || lv1
+    // 用 == 而非 === 兼容 id 类型不一致（string vs number）；同时按 type 兜底
+    const subRef = (detail.subsystems || []).find(s => s.id == lv1.id || (s.key === lv1.type && s.name === lv1.name)) || lv1
 
     nodes.push({
       id: lv1.id,
