@@ -34,7 +34,34 @@
           </div>
         </div>
       </div>
-      <!-- 第二行：项目地址独占整行 -->
+      <!-- 第二行：数据传输 + 市平台上传 两列 -->
+      <template v-if="dataStatus">
+        <div class="bp-status-grid">
+          <div class="bp-status-card" :class="dataStatus.transfer.ok ? 'bp-status-ok' : 'bp-status-warn'">
+            <div class="bp-status-icon">
+              <AppIcon name="refresh" :size="14" :stroke="dataStatus.transfer.ok ? '#2bd9a8' : '#ffb547'"/>
+            </div>
+            <div class="bp-status-body">
+              <div class="bp-status-title">数据传输</div>
+              <div class="bp-status-val" :class="dataStatus.transfer.ok ? 'ok' : 'warn'">
+                {{ dataStatus.transfer.subName || '—' }}
+              </div>
+            </div>
+          </div>
+          <div class="bp-status-card" :class="dataStatus.upload.ok ? 'bp-status-ok' : 'bp-status-warn'">
+            <div class="bp-status-icon">
+              <AppIcon name="upload" :size="14" :stroke="dataStatus.upload.ok ? '#2bd9a8' : '#ffb547'"/>
+            </div>
+            <div class="bp-status-body">
+              <div class="bp-status-title">市平台上传</div>
+              <div class="bp-status-val" :class="dataStatus.upload.ok ? 'ok' : 'warn'">
+                {{ dataStatus.upload.subName || '—' }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
+      <!-- 第三行：项目地址独占整行 -->
       <div class="bp-status-grid" style="grid-template-columns: 1fr;">
         <div class="bp-status-card bp-status-none">
           <div class="bp-status-icon">
@@ -149,6 +176,29 @@ const buildInfo = computed(() => {
     address:   find('项目地址'),
     area:      find('建筑面积'),
     circuits:  find('总回路数'),
+  }
+})
+
+// 从 dataQuantity 节点取数据传输和市平台上传的最新状态
+const dataStatus = computed(() => {
+  const rootNode = props.detail?._rootNode
+  if (!rootNode) return null
+  const subEnergyNode = (rootNode.children || []).find(n => n.type === 'subEnergy')
+  if (!subEnergyNode) return null
+  const dqNode = (subEnergyNode.children || []).find(n => n.type === 'dataQuantity')
+  if (!dqNode || !Array.isArray(dqNode.data)) return null
+
+  // 按 checkTime 降序，取每个 statusName 最新一条
+  const sorted = [...dqNode.data].sort((a, b) => (b.checkTime || '').localeCompare(a.checkTime || ''))
+  const latest = (name) => sorted.find(d => d.statusName === name)
+
+  const transfer = latest('数据传输')
+  const upload   = latest('市平台上传')
+  if (!transfer && !upload) return null
+
+  return {
+    transfer: { subName: transfer?.subName || '—', ok: transfer?.sign === 1 },
+    upload:   { subName: upload?.subName   || '—', ok: upload?.sign   === 1 },
   }
 })
 
