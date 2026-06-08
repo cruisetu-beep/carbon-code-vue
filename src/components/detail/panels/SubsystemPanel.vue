@@ -64,18 +64,6 @@
           </div>
         </div>
       </div>
-      <!-- 第三行：项目地址独占整行 -->
-      <div class="bp-status-grid" style="grid-template-columns: 1fr;">
-        <div class="bp-status-card bp-status-none">
-          <div class="bp-status-icon">
-            <AppIcon name="tag" :size="14" stroke="#4dc9ff"/>
-          </div>
-          <div class="bp-status-body">
-            <div class="bp-status-title">项目地址</div>
-            <div class="bp-status-val none si-address" :title="buildInfo.address">{{ buildInfo.address && buildInfo.address.length > 12 ? buildInfo.address.slice(0, 12) + '…' : (buildInfo.address || '—') }}</div>
-          </div>
-        </div>
-      </div>
     </template>
 
     <!-- 能耗监测图表（仅分项计量展示）-->

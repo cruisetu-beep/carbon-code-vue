@@ -9,8 +9,8 @@
         <span v-if="carbonQRLabel" class="dv-head-score">{{ carbonQRLabel }}</span>
       </h1>
       <div class="page-subtitle">
-        知识库已完成全部资料的智能解析、切片与图谱融合。
-        点击节点查看详情，点击子系统可在图谱中展开下级结构。
+        <AppIcon name="tag" :size="13" stroke="var(--text-2)"/>
+        {{ buildAddress }}
       </div>
     </div>
     <button class="btn ghost" @click="$emit('back')">
@@ -157,6 +157,18 @@ const crumbName = computed(() => selectedNode.value?.name || '建筑')
 const buildId = computed(() => {
   const bid = detail.value?._rootNode?.data?.buildId
   return bid || props.pkg.buildId || props.pkg.code
+})
+
+// 项目地址：从 subEnergy → baseInfo → generalInfo 里取
+const buildAddress = computed(() => {
+  const rootNode = detail.value?._rootNode
+  if (!rootNode) return props.pkg.name || ''
+  const subEnergy = (rootNode.children || []).find(n => n.type === 'subEnergy')
+  if (!subEnergy) return ''
+  const baseInfo = (subEnergy.children || []).find(n => n.type === 'baseInfo')
+  const generalInfo = baseInfo?.data?.generalInfo
+  if (!Array.isArray(generalInfo)) return rootNode.data?.buildAddr || ''
+  return generalInfo.find(d => d.key === '项目地址')?.value || rootNode.data?.buildAddr || ''
 })
 
 // 碳效码：找 type===carbonQR 的一级节点，取 evaDate 最新且有效的一条
