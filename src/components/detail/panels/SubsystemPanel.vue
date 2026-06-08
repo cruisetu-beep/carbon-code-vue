@@ -1,6 +1,49 @@
 <template>
   <div class="dv-panel">
     <PanelHeader :icon="icon" :color="color" type="子系统" :name="s.name"/>
+
+    <!-- 建筑基本信息卡（仅分项计量展示）-->
+    <template v-if="isSubEnergy && buildInfo">
+      <div class="bp-status-grid">
+        <div class="bp-status-card bp-status-none">
+          <div class="bp-status-icon">
+            <AppIcon name="cube" :size="14" stroke="#4dc9ff"/>
+          </div>
+          <div class="bp-status-body">
+            <div class="bp-status-title">建筑类型</div>
+            <div class="bp-status-val none">{{ buildInfo.buildType || '—' }}</div>
+          </div>
+        </div>
+        <div class="bp-status-card bp-status-none">
+          <div class="bp-status-icon">
+            <AppIcon name="map-pin" :size="14" stroke="#4dc9ff"/>
+          </div>
+          <div class="bp-status-body">
+            <div class="bp-status-title">项目地址</div>
+            <div class="bp-status-val none">{{ buildInfo.address || '—' }}</div>
+          </div>
+        </div>
+        <div class="bp-status-card bp-status-none">
+          <div class="bp-status-icon">
+            <AppIcon name="layers" :size="14" stroke="#4dc9ff"/>
+          </div>
+          <div class="bp-status-body">
+            <div class="bp-status-title">建筑面积</div>
+            <div class="bp-status-val none">{{ buildInfo.area || '—' }}</div>
+          </div>
+        </div>
+        <div class="bp-status-card bp-status-none">
+          <div class="bp-status-icon">
+            <AppIcon name="panel" :size="14" stroke="#4dc9ff"/>
+          </div>
+          <div class="bp-status-body">
+            <div class="bp-status-title">计量回路</div>
+            <div class="bp-status-val none">{{ buildInfo.circuits || '—' }}</div>
+          </div>
+        </div>
+      </div>
+    </template>
+
     <AISummary :text="s.summary"/>
 
     <template v-if="s.stats && s.stats.length">
@@ -69,12 +112,34 @@ const props = defineProps({
 })
 defineEmits(['selectNode'])
 
-// node.ref 是接口原始节点，其 .type 是 subEnergy / virtualDaynamo 等
 const s       = computed(() => props.node.ref)
 const rawType = computed(() => s.value?.type || props.node?._apiType || '')
 const meta    = computed(() => MODULE_META[rawType.value] || { color: '#4dc9ff', icon: 'panel' })
 const icon    = computed(() => String(s.value?.icon || meta.value.icon || 'panel'))
 const color   = computed(() => String(props.node?.color || s.value?.color || meta.value.color || '#4dc9ff'))
+
+// 是否为分项计量子系统
+const isSubEnergy = computed(() => rawType.value === 'subEnergy')
+
+// 从 _rootNode.data 里提取四个建筑基本信息字段
+const buildInfo = computed(() => {
+  const data = props.detail?._rootNode?.data
+  if (!data) return null
+  // 接口字段是 key/value 数组形式，按 key 查找
+  const find = (key) => {
+    if (Array.isArray(data)) {
+      return data.find(d => d.key === key)?.value || ''
+    }
+    // 也兼容对象形式
+    return data[key] || ''
+  }
+  return {
+    buildType: find('建筑类型'),
+    address:   find('项目地址'),
+    area:      find('建筑面积'),
+    circuits:  find('总回路数'),
+  }
+})
 
 const docs = computed(() =>
   (s.value?.docs || [])
