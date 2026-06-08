@@ -97,7 +97,10 @@ const carbonQRInfo = computed(() => {
   if (!baseInfo) return ''
   const dataArr = Array.isArray(baseInfo.data) ? baseInfo.data : []
   if (!dataArr.length) return ''
-  const d = dataArr[0]
+  const valid = dataArr
+    .filter(d => d.evaluationCode && Number(d.year) > 1900)
+    .sort((a, b) => Number(b.year) - Number(a.year))
+  const d = valid[0] || dataArr[0]
   return `${d.year} · ${d.evaluationCode}`
 })
 
