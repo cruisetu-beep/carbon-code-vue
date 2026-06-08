@@ -121,18 +121,25 @@ const color   = computed(() => String(props.node?.color || s.value?.color || met
 // 是否为分项计量子系统
 const isSubEnergy = computed(() => rawType.value === 'subEnergy')
 
-// 从 _rootNode.data 里提取四个建筑基本信息字段
+// 从 subEnergy.baseInfo.data.generalInfo 里提取四个字段
+// 路径: _rootNode.children[subEnergy].children[baseInfo].data.generalInfo
 const buildInfo = computed(() => {
-  const data = props.detail?._rootNode?.data
-  if (!data) return null
-  // 接口字段是 key/value 数组形式，按 key 查找
-  const find = (key) => {
-    if (Array.isArray(data)) {
-      return data.find(d => d.key === key)?.value || ''
-    }
-    // 也兼容对象形式
-    return data[key] || ''
-  }
+  const rootNode = props.detail?._rootNode
+  if (!rootNode) return null
+
+  // 找 subEnergy 一级节点
+  const subEnergyNode = (rootNode.children || []).find(n => n.type === 'subEnergy')
+  if (!subEnergyNode) return null
+
+  // 找 baseInfo 二级节点
+  const baseInfoNode = (subEnergyNode.children || []).find(n => n.type === 'baseInfo')
+  if (!baseInfoNode) return null
+
+  const generalInfo = baseInfoNode.data?.generalInfo
+  if (!Array.isArray(generalInfo)) return null
+
+  const find = (key) => generalInfo.find(d => d.key === key)?.value || ''
+
   return {
     buildType: find('建筑类型'),
     address:   find('项目地址'),
