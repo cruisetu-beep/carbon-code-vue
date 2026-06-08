@@ -163,6 +163,15 @@ function openFile(f) {
   cursor: default;
   transition: background 0.15s, border-color 0.15s;
 }
+.doc-file-name {
+  font-size: 11px; color: var(--text-0); font-weight: 500;
+  text-align: center; line-height: 1.4;
+  word-break: break-all;
+  width: 100%;
+  height: 2.8em;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 .doc-file-card:hover {
   background: rgba(77,201,255,0.06);
   border-color: rgba(77,201,255,0.3);
@@ -187,14 +196,6 @@ function openFile(f) {
   color: var(--text-3);
   font-family: "JetBrains Mono", monospace;
 }
-.doc-file-name {
-  font-size: 11px; color: var(--text-0); font-weight: 500;
-  text-align: center; line-height: 1.4;
-  word-break: break-all;
-  max-width: 100%;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-  overflow: hidden;
-}
 .doc-file-meta {
   font-size: 10px; color: var(--text-3);
   font-family: "JetBrains Mono", monospace;
@@ -202,6 +203,7 @@ function openFile(f) {
 }
 .doc-file-actions {
   display: flex; gap: 5px; width: 100%;
+  margin-top: auto;
 }
 .doc-btn-preview, .doc-btn-ai {
   flex: 1;
