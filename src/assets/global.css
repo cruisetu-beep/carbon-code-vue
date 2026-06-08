@@ -2225,3 +2225,8 @@
 /* SubsystemPanel 三列信息卡 */
 .si-three-col { grid-template-columns: 1fr 1fr 1fr !important; }
 .si-val-sm { font-size: 12px !important; }
+
+/* 三列卡片紧凑模式：图标区缩小 */
+.si-three-col .bp-status-card { padding: 8px 6px; gap: 6px; }
+.si-three-col .bp-status-icon { width: 22px; height: 22px; min-width: 22px; }
+.si-three-col .bp-status-title { font-size: 10px; }
