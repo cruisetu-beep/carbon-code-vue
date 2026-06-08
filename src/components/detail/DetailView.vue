@@ -159,7 +159,7 @@ const buildId = computed(() => {
   return bid || props.pkg.buildId || props.pkg.code
 })
 
-// 碳效码：找 type===carbonQR 的一级节点，取其 children[0].data[0]
+// 碳效码：找 type===carbonQR 的一级节点，取 evaDate 最新且有效的一条
 const carbonQRLabel = computed(() => {
   const rootNode = detail.value?._rootNode
   if (!rootNode) return ''
@@ -171,8 +171,12 @@ const carbonQRLabel = computed(() => {
   if (!baseInfoChild) return ''
   const dataArr = Array.isArray(baseInfoChild.data) ? baseInfoChild.data : []
   if (!dataArr.length) return ''
-  const d = dataArr[0]
-  return `${d.year} 碳效码 ${d.evaluationCode}`
+  // 过滤掉无效年份（year=1900），按 evaDate 降序取最新
+  const valid = dataArr
+    .filter(d => d.evaluationCode && Number(d.year) > 1900)
+    .sort((a, b) => Number(b.evaDate) - Number(a.evaDate))
+  const d = valid[0] || dataArr[0]
+  return `${d.evaDate} 碳效码 ${d.evaluationCode}`
 })
 </script>
 
