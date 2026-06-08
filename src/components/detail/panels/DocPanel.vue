@@ -59,8 +59,6 @@ import { computed } from 'vue'
 import PanelHeader   from '../shared/PanelHeader.vue'
 import { DV_COLORS } from '../../../data/constants.js'
 
-const BASE_URL = 'blob:https://www.ttbems.com/'
-
 const props = defineProps({
   node:   { type: Object, required: true },
   detail: { type: Object, required: true },
@@ -91,6 +89,7 @@ const files = computed(() => {
       id:         c.id,
       name:       c.data?.fileName || c.name || '未知文件',
       objectName: c.data?.objectName || '',
+      bucketName: c.data?.bucketName || 'report',
       contentType:c.data?.contentType || '',
       size:       c.data?.fileSize || '',
       uploadTime: c.data?.uploadTime || '',
@@ -103,6 +102,7 @@ const files = computed(() => {
       id:         String(i),
       name:       f.fileName || f.objectName || '未知文件',
       objectName: f.objectName || '',
+      bucketName: f.bucketName || 'report',
       contentType:f.contentType || '',
       size:       f.fileSize || '',
       uploadTime: f.uploadTime || '',
@@ -115,6 +115,7 @@ const files = computed(() => {
       id:         n.id,
       name:       n.data.fileName || n.name || '未知文件',
       objectName: n.data.objectName,
+      bucketName: n.data.bucketName || 'report',
       contentType:n.data.contentType || '',
       size:       n.data.fileSize || '',
       uploadTime: n.data.uploadTime || '',
@@ -140,7 +141,8 @@ function iconClass(f) {
 
 function openFile(f) {
   if (!f.objectName) return
-  window.open(BASE_URL + f.objectName, '_blank')
+  const url = `https://www.ttbems.com:14440/HPManage/api/public/oosFile?bucketName=${encodeURIComponent(f.bucketName || 'report')}&objectName=${encodeURIComponent(f.objectName)}`
+  window.open(url, '_blank')
 }
 </script>
 
