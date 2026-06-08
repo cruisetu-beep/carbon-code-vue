@@ -1,6 +1,6 @@
 <template>
   <div class="dv-panel">
-    <PanelHeader :icon="s.icon || 'panel'" :color="s.color || '#4dc9ff'" type="子系统"
+    <PanelHeader :icon="icon" :color="color" type="子系统"
                  :name="s.name"/>
     <AISummary :text="s.summary"/>
 
@@ -14,7 +14,7 @@
 
     <template v-if="s.realtime">
       <div class="dv-panel-section-title">24h 实时数据</div>
-      <MiniLine :data="s.realtime" :height="70" :color="s.color"
+      <MiniLine :data="s.realtime" :height="70" :color="color"
                 label="最近 24 小时功率曲线"/>
     </template>
 
@@ -46,6 +46,24 @@ import StatTile     from '../shared/StatTile.vue'
 import MiniLine     from '../shared/MiniLine.vue'
 import { DV_COLORS } from '../../../data/constants.js'
 
+// 与 stores/packages.js 保持一致的映射
+const MODULE_META = {
+  subEnergy:              { color: '#4dc9ff', icon: 'panel'    },
+  greenBuild:             { color: '#2bd9a8', icon: 'leaf'     },
+  virtualDaynamo:         { color: '#7a5cff', icon: 'bolt'     },
+  savingRenovation:       { color: '#2bd9a8', icon: 'leaf'     },
+  energyAudit:            { color: '#4dc9ff', icon: 'scan'     },
+  benchmark:              { color: '#a799ff', icon: 'graph'    },
+  effictImprove:          { color: '#ff8a47', icon: 'zap'      },
+  energyUnit:             { color: '#4dc9ff', icon: 'panel'    },
+  solar:                  { color: '#ff8a47', icon: 'sun'      },
+  charge:                 { color: '#ffb547', icon: 'plug'     },
+  carbonQR:               { color: '#2bd9a8', icon: 'sparkles' },
+  certificateGlectricity: { color: '#2bd9a8', icon: 'leaf'     },
+  blueprint:              { color: '#a799ff', icon: 'panel'    },
+  others:                 { color: '#888',    icon: 'panel'    },
+}
+
 const props = defineProps({
   node:   { type: Object, required: true },
   detail: { type: Object, required: true },
@@ -53,7 +71,14 @@ const props = defineProps({
 })
 defineEmits(['selectNode'])
 
-const s    = computed(() => props.node.ref)
+const s = computed(() => props.node.ref)
+
+// _apiType 是 buildGraph.js 里打在 graph 节点上的原始接口 type
+const apiType = computed(() => props.node._apiType || s.value?.type || '')
+const meta    = computed(() => MODULE_META[apiType.value] || { color: '#4dc9ff', icon: 'panel' })
+const icon    = computed(() => s.value?.icon  || meta.value.icon)
+const color   = computed(() => props.node.color || s.value?.color || meta.value.color)
+
 const docs = computed(() =>
   (s.value.docs || [])
     .map(did => ({ id: did, ...props.detail.docs?.[did] }))
