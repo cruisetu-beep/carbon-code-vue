@@ -180,12 +180,16 @@ const buildInfo = computed(() => {
 })
 
 // 从 dataQuantity 节点取数据传输和市平台上传的最新状态
+// 路径: subEnergy → data → dataQuantity
 const dataStatus = computed(() => {
   const rootNode = props.detail?._rootNode
   if (!rootNode) return null
   const subEnergyNode = (rootNode.children || []).find(n => n.type === 'subEnergy')
   if (!subEnergyNode) return null
-  const dqNode = (subEnergyNode.children || []).find(n => n.type === 'dataQuantity')
+  // 兼容两种路径：直接子节点 或 data子节点下
+  const dataNode = (subEnergyNode.children || []).find(n => n.type === 'data')
+  const searchIn = dataNode ? (dataNode.children || []) : (subEnergyNode.children || [])
+  const dqNode = searchIn.find(n => n.type === 'dataQuantity')
   if (!dqNode || !Array.isArray(dqNode.data)) return null
 
   // 按 checkTime 降序，取每个 statusName 最新一条
