@@ -5,7 +5,7 @@ import http from './http.js'
 
 // ── 资源包列表 ────────────────────────────────────────────────
 export function getPackageList() {
-  return http.get('/packages')
+  return http.get('/Resource/getResourceList')
 }
 
 // ── 资源包详情（传 buildId） ───────────────────────────────────

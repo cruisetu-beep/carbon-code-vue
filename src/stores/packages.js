@@ -101,6 +101,58 @@ function adaptDetail(raw) {
   }
 }
 
+function adaptList(rawList) {
+  if (!Array.isArray(rawList)) return []
+  if (rawList.length === 0) return []
+
+  const first = rawList[0]
+  const isResourceListItem =
+    first &&
+    (Object.prototype.hasOwnProperty.call(first, 'resourceID') ||
+      Object.prototype.hasOwnProperty.call(first, 'resourceName') ||
+      Object.prototype.hasOwnProperty.call(first, 'buildID') ||
+      Object.prototype.hasOwnProperty.call(first, 'caseID'))
+
+  if (!isResourceListItem) return rawList
+
+  return rawList.map(r => {
+    const catalogs = Array.isArray(r.catalogs) ? r.catalogs : []
+    const caseCount = catalogs.reduce((s, c) => s + (Number(c?.caseCount) || 0), 0)
+    const subs = catalogs
+      .filter(c => c?.catalogsType && c.catalogsType !== 'summary')
+      .map(c => ({
+        type: c.catalogsType,
+        name: c.catalogsName || c.catalogsType,
+        count: Number(c.caseCount) || 0,
+      }))
+
+    const code = String(r.caseID || r.buildID || r.resourceID || '')
+
+    let funcCode = r.buildType || ''
+    let funcName = r.buildTypeName || ''
+
+
+    let st = r.status === '就绪' ? 'active' : (r.status === '计算中' ? 'computing' : 'draft')
+    if (!r.status) st = Number(r.hasDelicateModel) === 1 ? 'active' : 'draft'
+
+    return {
+      code,
+      buildId: r.buildID,
+      name: r.resourceName || '',
+      status: st,
+      docs: r.fileCount !== undefined ? r.fileCount : caseCount,
+      entities: Number(r.catalogsCount) || subs.length,
+      score: r.carbonGrade || '—',
+      func: funcCode,
+      funcName: funcName,
+      area: r.buildArea || 0,
+      year: r.buildYear || null,
+      subs,
+      _raw: r,
+    }
+  })
+}
+
 export const usePackageStore = defineStore('packages', () => {
 
   // ── 状态 ────────────────────────────────────────────────────
@@ -124,7 +176,7 @@ export const usePackageStore = defineStore('packages', () => {
     listLoading.value = true
     error.value = null
     try {
-      list.value = await getPackageList()
+      list.value = adaptList(await getPackageList())
     } catch (e) {
       error.value = e.message
       console.error('[store] fetchList:', e)

@@ -96,7 +96,7 @@ GET https://www.ttbems.com:14442/CarbonData4AIAgentAPI/api/Resource/getResourceR
 
 列表接口（受 MOCK 开关控制）
 MOCK=true  → src/data/samplePkgs.js（本地静态）
-MOCK=false → GET /api/packages（真实后端）
+MOCK=false → GET /api/Resource/getResourceList（真实后端）
 ```
 
 后端响应统一格式：
