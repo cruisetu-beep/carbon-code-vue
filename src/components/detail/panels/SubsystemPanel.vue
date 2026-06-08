@@ -36,6 +36,15 @@
             <div class="bp-status-val none si-val-sm">{{ buildInfo?.startTime || '—' }}</div>
           </div>
         </div>
+        <div class="bp-status-card bp-status-none">
+          <div class="bp-status-icon">
+            <AppIcon name="panel" :size="12" stroke="#4dc9ff"/>
+          </div>
+          <div class="bp-status-body">
+            <div class="bp-status-title">计量回路</div>
+            <div class="bp-status-val none si-val-sm">{{ buildInfo?.circuits || '—' }}</div>
+          </div>
+        </div>
         <div v-if="dataStatus" class="bp-status-card si-three-col" :class="dataStatus.transfer.ok ? 'bp-status-ok' : 'bp-status-warn'">
           <div class="bp-status-icon">
             <AppIcon name="refresh" :size="12" :stroke="dataStatus.transfer.ok ? '#2bd9a8' : '#ffb547'"/>
@@ -54,15 +63,6 @@
             <div class="bp-status-val none si-val-sm">—</div>
           </div>
         </div>
-        <div class="bp-status-card bp-status-none">
-          <div class="bp-status-icon">
-            <AppIcon name="panel" :size="12" stroke="#4dc9ff"/>
-          </div>
-          <div class="bp-status-body">
-            <div class="bp-status-title">计量回路</div>
-            <div class="bp-status-val none si-val-sm">{{ buildInfo?.circuits || '—' }}</div>
-          </div>
-        </div>
       </div>
       <!-- 第三行：项目地址独占整行 -->
       <div class="bp-status-grid" style="grid-template-columns: 1fr;">
@@ -79,6 +79,12 @@
     </template>
 
     <AISummary :text="s.summary"/>
+
+    <!-- 能耗监测图表（仅分项计量展示）-->
+    <template v-if="isSubEnergy && energyData.length">
+      <div class="dv-panel-section-title">能耗监测（近24h）</div>
+      <EnergyChart :data="energyData" :unit="energyUnit" :color="color"/>
+    </template>
 
     <template v-if="s.stats && s.stats.length">
       <div class="dv-panel-section-title">结构化字段</div>
@@ -121,6 +127,7 @@ import AISummary     from '../shared/AISummary.vue'
 import StatTile      from '../shared/StatTile.vue'
 import MiniLine      from '../shared/MiniLine.vue'
 import { DV_COLORS } from '../../../data/constants.js'
+import EnergyChart   from '../shared/EnergyChart.vue'
 
 const MODULE_META = {
   subEnergy:              { color: '#4dc9ff', icon: 'panel'    },
@@ -151,6 +158,19 @@ const rawType = computed(() => s.value?.type || props.node?._apiType || '')
 const meta    = computed(() => MODULE_META[rawType.value] || { color: '#4dc9ff', icon: 'panel' })
 const icon    = computed(() => String(s.value?.icon || meta.value.icon || 'panel'))
 const color   = computed(() => String(props.node?.color || s.value?.color || meta.value.color || '#4dc9ff'))
+
+// 能耗数据：subEnergy → data 节点的 data 数组，时间正序
+const energyData = computed(() => {
+  if (!isSubEnergy.value) return []
+  const rootNode = props.detail?._rootNode
+  if (!rootNode) return []
+  const subEnergyNode = (rootNode.children || []).find(n => n.type === 'subEnergy')
+  if (!subEnergyNode) return []
+  const dataNode = (subEnergyNode.children || []).find(n => n.type === 'data')
+  if (!dataNode || !Array.isArray(dataNode.data)) return []
+  return dataNode.data.filter(d => d.time && d.value != null)
+})
+const energyUnit = computed(() => energyData.value[0]?.unit || '千瓦时')
 
 // 是否为分项计量子系统
 const isSubEnergy = computed(() => rawType.value === 'subEnergy')
