@@ -4,24 +4,36 @@
 
     <!-- 建筑基本信息卡（仅分项计量展示）-->
     <template v-if="isSubEnergy && buildInfo">
-      <!-- 第一行：建筑类型、建筑面积、计量回路三等分 -->
-      <div class="bp-status-grid si-three-col">
+      <!-- 第一行：建筑类型 + 建筑面积 两列 -->
+      <div class="bp-status-grid">
         <div class="bp-status-card bp-status-none">
           <div class="bp-status-icon">
-            <AppIcon name="cube" :size="12" stroke="#4dc9ff"/>
+            <AppIcon name="cube" :size="14" stroke="#4dc9ff"/>
           </div>
           <div class="bp-status-body">
             <div class="bp-status-title">建筑类型</div>
-            <div class="bp-status-val none si-val-sm">{{ buildInfo.buildType || '—' }}</div>
+            <div class="bp-status-val none">{{ buildInfo.buildType || '—' }}</div>
           </div>
         </div>
         <div class="bp-status-card bp-status-none">
           <div class="bp-status-icon">
-            <AppIcon name="database" :size="12" stroke="#4dc9ff"/>
+            <AppIcon name="database" :size="14" stroke="#4dc9ff"/>
           </div>
           <div class="bp-status-body">
             <div class="bp-status-title">建筑面积</div>
-            <div class="bp-status-val none si-val-sm">{{ (buildInfo.area || '—').replace('平方米', '㎡') }}</div>
+            <div class="bp-status-val none">{{ (buildInfo.area || '—').replace('平方米', '㎡') }}</div>
+          </div>
+        </div>
+      </div>
+      <!-- 第二行：接入时间 + 数据传输 + 计量回路 三列 -->
+      <div class="bp-status-grid si-three-col">
+        <div class="bp-status-card bp-status-none">
+          <div class="bp-status-icon">
+            <AppIcon name="bell" :size="12" stroke="#4dc9ff"/>
+          </div>
+          <div class="bp-status-body">
+            <div class="bp-status-title">接入时间</div>
+            <div class="bp-status-val none si-val-sm">{{ buildInfo?.startTime || '—' }}</div>
           </div>
         </div>
         <div class="bp-status-card bp-status-none">
@@ -30,11 +42,29 @@
           </div>
           <div class="bp-status-body">
             <div class="bp-status-title">计量回路</div>
-            <div class="bp-status-val none si-val-sm">{{ buildInfo.circuits || '—' }}</div>
+            <div class="bp-status-val none si-val-sm">{{ buildInfo?.circuits || '—' }}</div>
+          </div>
+        </div>
+        <div v-if="dataStatus" class="bp-status-card si-three-col" :class="dataStatus.transfer.ok ? 'bp-status-ok' : 'bp-status-warn'">
+          <div class="bp-status-icon">
+            <AppIcon name="refresh" :size="12" :stroke="dataStatus.transfer.ok ? '#2bd9a8' : '#ffb547'"/>
+          </div>
+          <div class="bp-status-body">
+            <div class="bp-status-title">数据传输</div>
+            <div class="bp-status-val si-val-sm" :class="dataStatus.transfer.ok ? 'ok' : 'warn'">
+              {{ dataStatus.transfer.subName || '—' }}
+            </div>
+          </div>
+        </div>
+        <div v-else class="bp-status-card bp-status-none">
+          <div class="bp-status-icon"><AppIcon name="refresh" :size="12" stroke="#4dc9ff"/></div>
+          <div class="bp-status-body">
+            <div class="bp-status-title">数据传输</div>
+            <div class="bp-status-val none si-val-sm">—</div>
           </div>
         </div>
       </div>
-      <!-- 第二行：项目地址独占整行 -->
+      <!-- 第三行：项目地址独占整行 -->
       <div class="bp-status-grid" style="grid-template-columns: 1fr;">
         <div class="bp-status-card bp-status-none">
           <div class="bp-status-icon">
@@ -49,6 +79,12 @@
     </template>
 
     <AISummary :text="s.summary"/>
+
+    <!-- 能耗监测图表（仅分项计量展示）-->
+    <template v-if="isSubEnergy && energyData.length">
+      <div class="dv-panel-section-title">能耗监测（近24h）</div>
+      <EnergyChart :data="energyData" :unit="energyUnit" :color="color"/>
+    </template>
 
     <template v-if="s.stats && s.stats.length">
       <div class="dv-panel-section-title">结构化字段</div>
@@ -91,6 +127,7 @@ import AISummary     from '../shared/AISummary.vue'
 import StatTile      from '../shared/StatTile.vue'
 import MiniLine      from '../shared/MiniLine.vue'
 import { DV_COLORS } from '../../../data/constants.js'
+import EnergyChart   from '../shared/EnergyChart.vue'
 
 const MODULE_META = {
   subEnergy:              { color: '#4dc9ff', icon: 'panel'    },
@@ -122,6 +159,19 @@ const meta    = computed(() => MODULE_META[rawType.value] || { color: '#4dc9ff',
 const icon    = computed(() => String(s.value?.icon || meta.value.icon || 'panel'))
 const color   = computed(() => String(props.node?.color || s.value?.color || meta.value.color || '#4dc9ff'))
 
+// 能耗数据：subEnergy → data 节点的 data 数组，时间正序
+const energyData = computed(() => {
+  if (!isSubEnergy.value) return []
+  const rootNode = props.detail?._rootNode
+  if (!rootNode) return []
+  const subEnergyNode = (rootNode.children || []).find(n => n.type === 'subEnergy')
+  if (!subEnergyNode) return []
+  const dataNode = (subEnergyNode.children || []).find(n => n.type === 'data')
+  if (!dataNode || !Array.isArray(dataNode.data)) return []
+  return dataNode.data.filter(d => d.time && d.value != null)
+})
+const energyUnit = computed(() => energyData.value[0]?.unit || '千瓦时')
+
 // 是否为分项计量子系统
 const isSubEnergy = computed(() => rawType.value === 'subEnergy')
 
@@ -149,6 +199,34 @@ const buildInfo = computed(() => {
     address:   find('项目地址'),
     area:      find('建筑面积'),
     circuits:  find('总回路数'),
+    startTime: find('开始时间'),
+  }
+})
+
+// 从 dataQuantity 节点取数据传输和市平台上传的最新状态
+// 路径: subEnergy → data → dataQuantity
+const dataStatus = computed(() => {
+  const rootNode = props.detail?._rootNode
+  if (!rootNode) return null
+  const subEnergyNode = (rootNode.children || []).find(n => n.type === 'subEnergy')
+  if (!subEnergyNode) return null
+  // 兼容两种路径：直接子节点 或 data子节点下
+  const dataNode = (subEnergyNode.children || []).find(n => n.type === 'data')
+  const searchIn = dataNode ? (dataNode.children || []) : (subEnergyNode.children || [])
+  const dqNode = searchIn.find(n => n.type === 'dataQuantity')
+  if (!dqNode || !Array.isArray(dqNode.data)) return null
+
+  // 按 checkTime 降序，取每个 statusName 最新一条
+  const sorted = [...dqNode.data].sort((a, b) => (b.checkTime || '').localeCompare(a.checkTime || ''))
+  const latest = (name) => sorted.find(d => d.statusName === name)
+
+  const transfer = latest('数据传输')
+  const upload   = latest('市平台上传')
+  if (!transfer && !upload) return null
+
+  return {
+    transfer: { subName: transfer?.subName || '—', ok: transfer?.sign === 1 },
+    upload:   { subName: upload?.subName   || '—', ok: upload?.sign   === 1 },
   }
 })
 
