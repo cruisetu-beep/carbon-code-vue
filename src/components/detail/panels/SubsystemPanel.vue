@@ -4,24 +4,54 @@
 
     <!-- 建筑基本信息卡（仅分项计量展示）-->
     <template v-if="isSubEnergy && buildInfo">
-      <!-- 第一行：建筑类型、建筑面积、计量回路三等分 -->
-      <div class="bp-status-grid si-three-col">
+      <!-- 第一行：建筑类型 + 建筑面积 两列 -->
+      <div class="bp-status-grid">
         <div class="bp-status-card bp-status-none">
           <div class="bp-status-icon">
-            <AppIcon name="cube" :size="12" stroke="#4dc9ff"/>
+            <AppIcon name="cube" :size="14" stroke="#4dc9ff"/>
           </div>
           <div class="bp-status-body">
             <div class="bp-status-title">建筑类型</div>
-            <div class="bp-status-val none si-val-sm">{{ buildInfo.buildType || '—' }}</div>
+            <div class="bp-status-val none">{{ buildInfo.buildType || '—' }}</div>
           </div>
         </div>
         <div class="bp-status-card bp-status-none">
           <div class="bp-status-icon">
-            <AppIcon name="database" :size="12" stroke="#4dc9ff"/>
+            <AppIcon name="database" :size="14" stroke="#4dc9ff"/>
           </div>
           <div class="bp-status-body">
             <div class="bp-status-title">建筑面积</div>
-            <div class="bp-status-val none si-val-sm">{{ (buildInfo.area || '—').replace('平方米', '㎡') }}</div>
+            <div class="bp-status-val none">{{ (buildInfo.area || '—').replace('平方米', '㎡') }}</div>
+          </div>
+        </div>
+      </div>
+      <!-- 第二行：接入时间 + 数据传输 + 计量回路 三列 -->
+      <div class="bp-status-grid si-three-col">
+        <div class="bp-status-card bp-status-none">
+          <div class="bp-status-icon">
+            <AppIcon name="bell" :size="12" stroke="#4dc9ff"/>
+          </div>
+          <div class="bp-status-body">
+            <div class="bp-status-title">接入时间</div>
+            <div class="bp-status-val none si-val-sm">{{ buildInfo?.startTime || '—' }}</div>
+          </div>
+        </div>
+        <div v-if="dataStatus" class="bp-status-card si-three-col" :class="dataStatus.transfer.ok ? 'bp-status-ok' : 'bp-status-warn'">
+          <div class="bp-status-icon">
+            <AppIcon name="refresh" :size="12" :stroke="dataStatus.transfer.ok ? '#2bd9a8' : '#ffb547'"/>
+          </div>
+          <div class="bp-status-body">
+            <div class="bp-status-title">数据传输</div>
+            <div class="bp-status-val si-val-sm" :class="dataStatus.transfer.ok ? 'ok' : 'warn'">
+              {{ dataStatus.transfer.subName || '—' }}
+            </div>
+          </div>
+        </div>
+        <div v-else class="bp-status-card bp-status-none">
+          <div class="bp-status-icon"><AppIcon name="refresh" :size="12" stroke="#4dc9ff"/></div>
+          <div class="bp-status-body">
+            <div class="bp-status-title">数据传输</div>
+            <div class="bp-status-val none si-val-sm">—</div>
           </div>
         </div>
         <div class="bp-status-card bp-status-none">
@@ -30,37 +60,10 @@
           </div>
           <div class="bp-status-body">
             <div class="bp-status-title">计量回路</div>
-            <div class="bp-status-val none si-val-sm">{{ buildInfo.circuits || '—' }}</div>
+            <div class="bp-status-val none si-val-sm">{{ buildInfo?.circuits || '—' }}</div>
           </div>
         </div>
       </div>
-      <!-- 第二行：数据传输 + 市平台上传 两列 -->
-      <template v-if="dataStatus">
-        <div class="bp-status-grid">
-          <div class="bp-status-card" :class="dataStatus.transfer.ok ? 'bp-status-ok' : 'bp-status-warn'">
-            <div class="bp-status-icon">
-              <AppIcon name="refresh" :size="14" :stroke="dataStatus.transfer.ok ? '#2bd9a8' : '#ffb547'"/>
-            </div>
-            <div class="bp-status-body">
-              <div class="bp-status-title">数据传输</div>
-              <div class="bp-status-val" :class="dataStatus.transfer.ok ? 'ok' : 'warn'">
-                {{ dataStatus.transfer.subName || '—' }}
-              </div>
-            </div>
-          </div>
-          <div class="bp-status-card" :class="dataStatus.upload.ok ? 'bp-status-ok' : 'bp-status-warn'">
-            <div class="bp-status-icon">
-              <AppIcon name="upload" :size="14" :stroke="dataStatus.upload.ok ? '#2bd9a8' : '#ffb547'"/>
-            </div>
-            <div class="bp-status-body">
-              <div class="bp-status-title">市平台上传</div>
-              <div class="bp-status-val" :class="dataStatus.upload.ok ? 'ok' : 'warn'">
-                {{ dataStatus.upload.subName || '—' }}
-              </div>
-            </div>
-          </div>
-        </div>
-      </template>
       <!-- 第三行：项目地址独占整行 -->
       <div class="bp-status-grid" style="grid-template-columns: 1fr;">
         <div class="bp-status-card bp-status-none">
@@ -176,6 +179,7 @@ const buildInfo = computed(() => {
     address:   find('项目地址'),
     area:      find('建筑面积'),
     circuits:  find('总回路数'),
+    startTime: find('开始时间'),
   }
 })
 
