@@ -175,6 +175,7 @@ const carbonQRLabel = computed(() => {
   const valid = dataArr
     .filter(d => d.evaluationCode && Number(d.year) > 1900)
     .sort((a, b) => Number(b.year) - Number(a.year))
+  console.log('[carbonQR] dataArr years:', dataArr.map(x => x.year), 'valid:', valid.map(x => x.year))
   const d = valid[0] || dataArr[0]
   return `${d.year} 碳效码 ${d.evaluationCode}`
 })
