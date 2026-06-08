@@ -8,9 +8,10 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://www.ttbems.com:14442/CarbonData4AIAgentAPI',
+        target: 'https://www.ttbems.com:14442/CarbonData4AIAgentAPI/api',
         changeOrigin: true,
-        secure: false,   // 忽略自签名证书
+        secure: false,        // 忽略自签名证书
+        rewrite: path => path.replace(/^\/api/, ''),  // 去掉 /api 前缀再转发
       }
     }
   }
