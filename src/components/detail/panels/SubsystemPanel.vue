@@ -4,7 +4,20 @@
 
     <!-- 建筑基本信息卡（仅分项计量展示）-->
     <template v-if="isSubEnergy && buildInfo">
-      <div class="bp-status-grid">
+      <!-- 第一行：项目地址独占整行 -->
+      <div class="bp-status-grid" style="grid-template-columns: 1fr;">
+        <div class="bp-status-card bp-status-none">
+          <div class="bp-status-icon">
+            <AppIcon name="tag" :size="14" stroke="#4dc9ff"/>
+          </div>
+          <div class="bp-status-body">
+            <div class="bp-status-title">项目地址</div>
+            <div class="bp-status-val none">{{ buildInfo.address || '—' }}</div>
+          </div>
+        </div>
+      </div>
+      <!-- 第二行：建筑类型、建筑面积、计量回路三等分 -->
+      <div class="bp-status-grid" style="grid-template-columns: 1fr 1fr 1fr;">
         <div class="bp-status-card bp-status-none">
           <div class="bp-status-icon">
             <AppIcon name="cube" :size="14" stroke="#4dc9ff"/>
@@ -16,16 +29,7 @@
         </div>
         <div class="bp-status-card bp-status-none">
           <div class="bp-status-icon">
-            <AppIcon name="map-pin" :size="14" stroke="#4dc9ff"/>
-          </div>
-          <div class="bp-status-body">
-            <div class="bp-status-title">项目地址</div>
-            <div class="bp-status-val none">{{ buildInfo.address || '—' }}</div>
-          </div>
-        </div>
-        <div class="bp-status-card bp-status-none">
-          <div class="bp-status-icon">
-            <AppIcon name="layers" :size="14" stroke="#4dc9ff"/>
+            <AppIcon name="database" :size="14" stroke="#4dc9ff"/>
           </div>
           <div class="bp-status-body">
             <div class="bp-status-title">建筑面积</div>
