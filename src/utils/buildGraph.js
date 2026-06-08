@@ -70,13 +70,17 @@ export function dvBuildGraph(detail, expandedSubsystem, expandedDoc) {
     const y = cy + Math.sin(ang) * R
     const color = SUB_COLORS[lv1.type] || '#4dc9ff'
 
+    // 用 detail.subsystems 里已处理好的对象作 ref（含 icon/color），fallback 原始节点
+    // 用 == 而非 === 兼容 id 类型不一致（string vs number）；同时按 type 兜底
+    const subRef = (detail.subsystems || []).find(s => s.id == lv1.id || (s.key === lv1.type && s.name === lv1.name)) || lv1
+
     nodes.push({
       id: lv1.id,
       type: 'subsystem',
       name: lv1.name,
       x, y, r: 14,
       parent: 'building',
-      ref: lv1,
+      ref: subRef,
       angle: ang,
       color,
       _apiType: lv1.type,

@@ -1,7 +1,7 @@
 <template>
   <div class="dv-panel-head">
     <div class="dv-panel-icon" :style="{ background: `linear-gradient(135deg, ${color}, ${color}80)` }">
-      <AppIcon :name="icon" :size="18" stroke="#fff"/>
+      <AppIcon :name="icon || 'panel'" :size="18" stroke="#fff"/>
     </div>
     <div class="dv-panel-title-wrap">
       <div class="dv-panel-type">{{ type }}</div>
@@ -13,8 +13,8 @@
 <script setup>
 import AppIcon from '../../shared/AppIcon.vue'
 defineProps({
-  icon:  { type: String, required: true },
-  color: { type: String, required: true },
+  icon:  { type: String, default: 'panel' },
+  color: { type: String, default: '#4dc9ff' },
   type:  { type: String, required: true },
   name:  { type: String, required: true },
   sub:   { type: String, default: '' },
