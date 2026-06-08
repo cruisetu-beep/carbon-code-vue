@@ -72,7 +72,21 @@
       <EnergyChart :data="energyData" :unit="energyUnit" :color="color"/>
     </template>
 
-    <AISummary :text="s.summary"/>
+    <!-- AI 智能解析（分项计量：打字机样式，取接口 aiSummary 节点） -->
+    <template v-if="isSubEnergy">
+      <div class="bp-ai-wrap">
+        <div class="bp-ai-header">
+          <AppIcon name="sparkles" :size="11" stroke="#a799ff"/>
+          <span>AI 智能解析</span>
+          <span v-if="aiTyping" class="bp-ai-progress">{{ aiTypingProgress }}%</span>
+        </div>
+        <div class="bp-ai-body" ref="aiBodyEl">
+          <span class="bp-ai-text" v-html="aiDisplayHtml"/>
+          <span v-if="aiTyping" class="bp-ai-cursor">|</span>
+        </div>
+      </div>
+    </template>
+    <AISummary v-else :text="s.summary"/>
 
     <template v-if="s.stats && s.stats.length">
       <div class="dv-panel-section-title">结构化字段</div>
@@ -108,7 +122,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, watch, onBeforeUnmount } from 'vue'
 import AppIcon       from '../../shared/AppIcon.vue'
 import PanelHeader   from '../shared/PanelHeader.vue'
 import AISummary     from '../shared/AISummary.vue'
@@ -218,7 +232,55 @@ const dataStatus = computed(() => {
   }
 })
 
-const docs = computed(() =>
+// ── 分项计量 AI 打字机 ─────────────────────────────────────────
+const aiFullText = computed(() => {
+  if (!isSubEnergy.value) return ''
+  const rootNode = props.detail?._rootNode
+  if (!rootNode) return ''
+  const subEnergyNode = (rootNode.children || []).find(n => n.type === 'subEnergy')
+  if (!subEnergyNode) return ''
+  const aiNode = (subEnergyNode.children || []).find(n => n.type === 'aiSummary')
+  return aiNode?.data || ''
+})
+
+function renderMd(text) {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n/g, '<br>')
+}
+
+const aiDisplayText    = ref('')
+const aiTyping         = ref(false)
+const aiTypingProgress = ref(0)
+const aiBodyEl         = ref(null)
+let   aiTimer          = null
+
+function startAiTyping(text) {
+  clearInterval(aiTimer)
+  aiDisplayText.value = ''
+  aiTyping.value = true
+  aiTypingProgress.value = 0
+  let i = 0
+  aiTimer = setInterval(() => {
+    if (i >= text.length) {
+      clearInterval(aiTimer)
+      aiTyping.value = false
+      aiTypingProgress.value = 100
+      return
+    }
+    const step = text.length > 500 ? 3 : 1
+    aiDisplayText.value += text.slice(i, i + step)
+    i += step
+    aiTypingProgress.value = Math.min(99, Math.round(i / text.length * 100))
+    if (aiBodyEl.value) aiBodyEl.value.scrollTop = aiBodyEl.value.scrollHeight
+  }, 30)
+}
+
+const aiDisplayHtml = computed(() => renderMd(aiDisplayText.value))
+
+watch(aiFullText, (val) => { if (val) startAiTyping(val) }, { immediate: true })
+onBeforeUnmount(() => clearInterval(aiTimer))
+
   (s.value?.docs || [])
     .map(did => ({ id: did, ...props.detail.docs?.[did] }))
     .filter(d => d.name)
