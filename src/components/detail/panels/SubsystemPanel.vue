@@ -1,7 +1,7 @@
 <template>
   <div class="dv-panel">
-    <PanelHeader :icon="s.icon" :color="s.color" type="子系统"
-                 :name="s.name" :sub="`所属：${pkg.name}`"/>
+    <PanelHeader :icon="s.icon || 'panel'" :color="s.color || '#4dc9ff'" type="子系统"
+                 :name="s.name"/>
     <AISummary :text="s.summary"/>
 
     <template v-if="s.stats && s.stats.length">
