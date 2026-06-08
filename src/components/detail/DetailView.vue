@@ -119,6 +119,22 @@ function findNodeType(id) {
   return null
 }
 
+// 在原始 _rootNode 树里找节点，返回 { node, lv1Parent, lv2Parent }
+function findRawNode(id) {
+  const rootNode = detail.value?._rootNode
+  if (!rootNode) return null
+  for (const lv1 of (rootNode.children || [])) {
+    if (lv1.id === id) return { node: lv1, lv1Parent: null, lv2Parent: null }
+    for (const lv2 of (lv1.children || [])) {
+      if (lv2.id === id) return { node: lv2, lv1Parent: lv1, lv2Parent: null }
+      for (const lv3 of (lv2.children || [])) {
+        if (lv3.id === id) return { node: lv3, lv1Parent: lv1, lv2Parent: lv2 }
+      }
+    }
+  }
+  return null
+}
+
 function onSelectNode(id) {
   selectedId.value = id
   const t = findNodeType(id)
@@ -140,6 +156,19 @@ function onSelectNode(id) {
     expandedDoc.value = docId
   } else if (t === 'standard') {
     expandedSubsystem.value = 'standards'
+  } else {
+    // 真实接口节点：在原始树里找，自动展开父级
+    const found = findRawNode(id)
+    if (found) {
+      if (found.lv2Parent) {
+        // 三级节点（文件节点）：展开一级父
+        expandedSubsystem.value = found.lv1Parent?.id || null
+        expandedDoc.value = found.lv2Parent.id
+      } else if (found.lv1Parent) {
+        // 二级节点：展开一级父
+        expandedSubsystem.value = found.lv1Parent.id
+      }
+    }
   }
 }
 
