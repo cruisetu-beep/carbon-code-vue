@@ -1,7 +1,6 @@
 <template>
   <div class="dv-panel">
-    <PanelHeader :icon="icon" :color="color" type="子系统"
-                 :name="s.name"/>
+    <PanelHeader :icon="icon" :color="color" type="子系统" :name="s.name"/>
     <AISummary :text="s.summary"/>
 
     <template v-if="s.stats && s.stats.length">
@@ -39,14 +38,13 @@
 
 <script setup>
 import { computed } from 'vue'
-import AppIcon      from '../../shared/AppIcon.vue'
-import PanelHeader  from '../shared/PanelHeader.vue'
-import AISummary    from '../shared/AISummary.vue'
-import StatTile     from '../shared/StatTile.vue'
-import MiniLine     from '../shared/MiniLine.vue'
+import AppIcon       from '../../shared/AppIcon.vue'
+import PanelHeader   from '../shared/PanelHeader.vue'
+import AISummary     from '../shared/AISummary.vue'
+import StatTile      from '../shared/StatTile.vue'
+import MiniLine      from '../shared/MiniLine.vue'
 import { DV_COLORS } from '../../../data/constants.js'
 
-// 与 stores/packages.js 保持一致的映射
 const MODULE_META = {
   subEnergy:              { color: '#4dc9ff', icon: 'panel'    },
   greenBuild:             { color: '#2bd9a8', icon: 'leaf'     },
@@ -71,16 +69,15 @@ const props = defineProps({
 })
 defineEmits(['selectNode'])
 
-const s = computed(() => props.node.ref)
-
-// _apiType 是 buildGraph.js 里打在 graph 节点上的原始接口 type
-const apiType = computed(() => props.node._apiType || s.value?.type || '')
-const meta    = computed(() => MODULE_META[apiType.value] || { color: '#4dc9ff', icon: 'panel' })
-const icon    = computed(() => s.value?.icon  || meta.value.icon)
-const color   = computed(() => props.node.color || s.value?.color || meta.value.color)
+// node.ref 是接口原始节点，其 .type 是 subEnergy / virtualDaynamo 等
+const s       = computed(() => props.node.ref)
+const rawType = computed(() => s.value?.type || props.node?._apiType || '')
+const meta    = computed(() => MODULE_META[rawType.value] || { color: '#4dc9ff', icon: 'panel' })
+const icon    = computed(() => String(s.value?.icon || meta.value.icon || 'panel'))
+const color   = computed(() => String(props.node?.color || s.value?.color || meta.value.color || '#4dc9ff'))
 
 const docs = computed(() =>
-  (s.value.docs || [])
+  (s.value?.docs || [])
     .map(did => ({ id: did, ...props.detail.docs?.[did] }))
     .filter(d => d.name)
 )
