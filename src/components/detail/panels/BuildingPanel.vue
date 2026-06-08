@@ -61,7 +61,7 @@
     <!-- AI 总结打字机 -->
     <div class="bp-ai-wrap">
       <div class="bp-ai-header">
-        <AppIcon name="sparkles" :size="11" stroke="#a799ff"/>
+        <AppIcon name="sparkles" :size="11" stroke="#4dc9ff"/>
         <span>AI 智能解析</span>
         <span v-if="typing" class="bp-ai-progress">{{ typingProgress }}%</span>
       </div>
