@@ -163,10 +163,10 @@ export function applyPkgFilters(list, filters, options = {}) {
 
   return (Array.isArray(list) ? list : []).filter(p => {
     if (keyword) {
-      const name = normText(p.name)
-      const code = normText(p.code)
-      const funcName = normText(p.funcName)
-      if (!name.includes(keyword) && !code.includes(keyword) && !funcName.includes(keyword)) return false
+      const resourceName = normText(p._raw?.resourceName || p.name)
+      const buildID = normText(p._raw?.buildID || p.buildId)
+      const caseID = normText(p._raw?.caseID)
+      if (!resourceName.includes(keyword) && !buildID.includes(keyword) && !caseID.includes(keyword)) return false
     }
     if (funcs.length && !funcs.includes(p.func)) return false
     if (statuses.length && !statuses.includes(p.status)) return false
@@ -383,7 +383,6 @@ export function sanitizePkgFiltersAgainstFacets(filters, facets) {
 export function buildPkgListBackendParams(filters) {
   const f = filters || createDefaultPkgFilters()
   const params = {
-    resourceName: f.keyword ? String(f.keyword).trim() : undefined,
     buildType: Array.isArray(f.funcs) && f.funcs.length ? f.funcs.join(',') : undefined,
     status: Array.isArray(f.statuses) && f.statuses.length ? f.statuses.join(',') : undefined,
     fileCountMin: f.docsMin !== null && f.docsMin !== '' ? Number(f.docsMin) : undefined,

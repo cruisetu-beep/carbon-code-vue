@@ -283,6 +283,14 @@ async function fetchApplied() {
     }
 
     const params = buildPkgListBackendParams(appliedFilters.value)
+    
+    // 如果没有后端筛选参数，且已经有全量数据，则直接使用全量数据
+    if (Object.keys(params).length === 0 && universeList.value.length) {
+      serverList.value = universeList.value
+      if (!hasLoaded.value && universeList.value.length) hasLoaded.value = true
+      return
+    }
+
     let raw
     if (MOCK) {
       raw = await getPackageList()
