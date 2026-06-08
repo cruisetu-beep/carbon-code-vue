@@ -281,6 +281,7 @@ const aiDisplayHtml = computed(() => renderMd(aiDisplayText.value))
 watch(aiFullText, (val) => { if (val) startAiTyping(val) }, { immediate: true })
 onBeforeUnmount(() => clearInterval(aiTimer))
 
+const docs = computed(() =>
   (s.value?.docs || [])
     .map(did => ({ id: did, ...props.detail.docs?.[did] }))
     .filter(d => d.name)
