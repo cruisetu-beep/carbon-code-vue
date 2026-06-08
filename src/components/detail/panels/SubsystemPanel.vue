@@ -4,7 +4,37 @@
 
     <!-- 建筑基本信息卡（仅分项计量展示）-->
     <template v-if="isSubEnergy && buildInfo">
-      <!-- 第一行：项目地址独占整行 -->
+      <!-- 第一行：建筑类型、建筑面积、计量回路三等分 -->
+      <div class="bp-status-grid si-three-col">
+        <div class="bp-status-card bp-status-none">
+          <div class="bp-status-icon">
+            <AppIcon name="cube" :size="12" stroke="#4dc9ff"/>
+          </div>
+          <div class="bp-status-body">
+            <div class="bp-status-title">建筑类型</div>
+            <div class="bp-status-val none si-val-sm">{{ buildInfo.buildType || '—' }}</div>
+          </div>
+        </div>
+        <div class="bp-status-card bp-status-none">
+          <div class="bp-status-icon">
+            <AppIcon name="database" :size="12" stroke="#4dc9ff"/>
+          </div>
+          <div class="bp-status-body">
+            <div class="bp-status-title">建筑面积</div>
+            <div class="bp-status-val none si-val-sm">{{ (buildInfo.area || '—').replace('平方米', '㎡') }}</div>
+          </div>
+        </div>
+        <div class="bp-status-card bp-status-none">
+          <div class="bp-status-icon">
+            <AppIcon name="panel" :size="12" stroke="#4dc9ff"/>
+          </div>
+          <div class="bp-status-body">
+            <div class="bp-status-title">计量回路</div>
+            <div class="bp-status-val none si-val-sm">{{ buildInfo.circuits || '—' }}</div>
+          </div>
+        </div>
+      </div>
+      <!-- 第二行：项目地址独占整行 -->
       <div class="bp-status-grid" style="grid-template-columns: 1fr;">
         <div class="bp-status-card bp-status-none">
           <div class="bp-status-icon">
@@ -13,36 +43,6 @@
           <div class="bp-status-body">
             <div class="bp-status-title">项目地址</div>
             <div class="bp-status-val none">{{ buildInfo.address || '—' }}</div>
-          </div>
-        </div>
-      </div>
-      <!-- 第二行：建筑类型、建筑面积、计量回路三等分 -->
-      <div class="bp-status-grid" style="grid-template-columns: 1fr 1fr 1fr;">
-        <div class="bp-status-card bp-status-none">
-          <div class="bp-status-icon">
-            <AppIcon name="cube" :size="14" stroke="#4dc9ff"/>
-          </div>
-          <div class="bp-status-body">
-            <div class="bp-status-title">建筑类型</div>
-            <div class="bp-status-val none">{{ buildInfo.buildType || '—' }}</div>
-          </div>
-        </div>
-        <div class="bp-status-card bp-status-none">
-          <div class="bp-status-icon">
-            <AppIcon name="database" :size="14" stroke="#4dc9ff"/>
-          </div>
-          <div class="bp-status-body">
-            <div class="bp-status-title">建筑面积</div>
-            <div class="bp-status-val none">{{ buildInfo.area || '—' }}</div>
-          </div>
-        </div>
-        <div class="bp-status-card bp-status-none">
-          <div class="bp-status-icon">
-            <AppIcon name="panel" :size="14" stroke="#4dc9ff"/>
-          </div>
-          <div class="bp-status-body">
-            <div class="bp-status-title">计量回路</div>
-            <div class="bp-status-val none">{{ buildInfo.circuits || '—' }}</div>
           </div>
         </div>
       </div>
