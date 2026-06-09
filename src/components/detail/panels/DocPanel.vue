@@ -145,7 +145,7 @@ const files = computed(() => {
 const aiFullText = computed(() => {
   const n = rawNode.value
   if (!n) return ''
-  const aiNode = (n.children || []).find(c => c.type === 'aiSummary')
+  const aiNode = (n.children || []).find(c => c.type === 'aiSummary' && c.levelType === 'AI节点')
   return aiNode?.data || ''
 })
 
