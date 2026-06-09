@@ -56,7 +56,6 @@ import RawNodePanel   from './panels/RawNodePanel.vue'
 
 const RAW_API_TYPES = new Set([
   'baseInfo', 'modelConfig', 'data', 'dataQuantity',
-  'file',  // 文档二级节点走 DocPanel，但文件节点本身也可能走这里
 ])
 
 const props = defineProps({
