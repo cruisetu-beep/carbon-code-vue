@@ -70,7 +70,7 @@
 </template>
 
 <script setup>
-import { computed, ref, watch, onBeforeUnmount } from 'vue'
+import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import AppIcon      from '../../shared/AppIcon.vue'
 import PanelHeader   from '../shared/PanelHeader.vue'
 import { DV_COLORS } from '../../../data/constants.js'
@@ -154,12 +154,10 @@ const files = computed(() => {
 // ── AI 智能解析（动态查找 children 中的 aiSummary）────────────
 const aiFullText = computed(() => {
   const n = rawNode.value
-  console.log('[DocPanel] rawNode:', n?.id, n?.type, n?.levelType, 'children:', n?.children?.map(c => c.type + '/' + c.levelType))
   if (!n) return ''
   const aiNode = (n.children || []).find(c =>
-    (c.type === 'aiSummary' || c.type === 'aiSummary') && c.levelType === 'AI节点'
+    c.type === 'aiSummary' && c.levelType === 'AI节点'
   ) || (n.children || []).find(c => c.levelType === 'AI节点' && c.data)
-  console.log('[DocPanel] aiNode:', aiNode?.id, aiNode?.levelType, 'data len:', aiNode?.data?.length)
   return aiNode?.data || ''
 })
 
@@ -198,8 +196,9 @@ function startAiTyping(text) {
 
 const aiDisplayHtml = computed(() => renderMd(aiDisplayText.value))
 
-watch(aiFullText, (val) => { if (val) startAiTyping(val) }, { immediate: true })
-onBeforeUnmount(() => clearInterval(aiTimer))
+watch(aiFullText, (val) => { if (val) startAiTyping(val) })
+onMounted(() => { if (aiFullText.value) startAiTyping(aiFullText.value) })
+onUnmounted(() => clearInterval(aiTimer))
 
 function extOf(f) {
   const name = f.name || ''
