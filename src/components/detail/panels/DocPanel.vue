@@ -99,17 +99,27 @@ const files = computed(() => {
   const n = rawNode.value
   if (!n) return []
 
-  // 情况1：二级文档节点，children 是文件节点数组
+  // 情况1：二级文档节点，children 里包含文件节点（levelType=文件节点 或 type 为空）
   if (Array.isArray(n.children) && n.children.length) {
-    return n.children.map(c => ({
-      id:         c.id,
-      name:       c.data?.fileName || c.name || '未知文件',
-      objectName: c.data?.objectName || '',
-      bucketName: c.data?.bucketName || 'report',
-      contentType:c.data?.contentType || '',
-      size:       c.data?.fileSize || '',
-      uploadTime: c.data?.uploadTime || '',
-    }))
+    const fileChildren = n.children.filter(c =>
+      c.levelType === '文件节点' || (c.type !== 'aiSummary' && c.type !== 'AI节点' && c.type !== '')
+    )
+    // 兼容 type 为空字符串的文件节点
+    const allFileChildren = n.children.filter(c =>
+      c.levelType === '文件节点' || (c.type === '' && c.data?.objectName)
+    )
+    const list = allFileChildren.length ? allFileChildren : fileChildren
+    if (list.length) {
+      return list.map(c => ({
+        id:         c.id,
+        name:       c.data?.fileName || c.name || '未知文件',
+        objectName: c.data?.objectName || '',
+        bucketName: c.data?.bucketName || 'report',
+        contentType:c.data?.contentType || '',
+        size:       c.data?.fileSize || '',
+        uploadTime: c.data?.uploadTime || '',
+      }))
+    }
   }
 
   // 情况2：data 是数组（直接存文件信息）
