@@ -310,7 +310,7 @@ function openFile(f) {
   max-height: 300px;
   overflow-y: auto;
 }
-
+.doc-file-empty {
   display: flex; flex-direction: column; align-items: center;
   gap: 10px; padding: 32px 0;
   color: var(--text-3); font-size: 13px;
