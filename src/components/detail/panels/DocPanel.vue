@@ -196,8 +196,9 @@ function startAiTyping(text) {
 
 const aiDisplayHtml = computed(() => renderMd(aiDisplayText.value))
 
-watch(aiFullText, (val) => { if (val) startAiTyping(val) })
-onMounted(() => { if (aiFullText.value) startAiTyping(aiFullText.value) })
+watch(aiFullText, (val) => {
+  if (val) startAiTyping(val)
+}, { immediate: true })
 onUnmounted(() => clearInterval(aiTimer))
 
 function extOf(f) {

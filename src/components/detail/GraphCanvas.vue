@@ -50,6 +50,7 @@ const emit = defineEmits(['selectNode'])
 
 const chartEl   = ref(null)
 let   chart     = null
+let   cleanupFn = null
 const zoomLevel = ref(1)
 // 固定统计 L0+L1+L2，用 computed 保证响应式
 const nodeCount = computed(() => {
@@ -339,7 +340,8 @@ onMounted(async () => {
   initChart()
   const handler = () => { chart?.resize(); refreshChart() }
   window.addEventListener('resize', handler)
-  onBeforeUnmount(() => { chart?.dispose(); window.removeEventListener('resize', handler) })
+  cleanupFn = () => { chart?.dispose(); window.removeEventListener('resize', handler) }
 })
+onBeforeUnmount(() => cleanupFn?.())
 </script>
 
