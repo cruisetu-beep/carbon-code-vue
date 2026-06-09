@@ -497,10 +497,9 @@
   flex: none;
   display: flex;
   flex-direction: column;
-  min-height: 260px;
 }
 .dv-panel > .bp-ai-wrap .bp-ai-body {
-  max-height: 300px;
+  max-height: 400px;
   overflow-y: auto;
 }
 .bp-ai-header {
@@ -518,7 +517,7 @@
 }
 .bp-ai-body {
   padding: 12px;
-  flex: 1;
+  flex: none;
   overflow-y: auto;
   font-size: 12.5px; line-height: 1.8;
   color: var(--text-1);
