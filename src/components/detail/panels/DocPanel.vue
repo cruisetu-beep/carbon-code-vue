@@ -54,7 +54,7 @@
 
     <!-- AI 智能解析 -->
     <template v-if="aiFullText">
-      <div class="bp-ai-wrap" style="margin-top: 12px;">
+      <div class="bp-ai-wrap doc-ai-wrap" style="margin-top: 12px;">
         <div class="bp-ai-header">
           <AppIcon name="sparkles" :size="11" stroke="#4dc9ff"/>
           <span>AI 智能解析</span>
@@ -301,7 +301,16 @@ function openFile(f) {
   color: #a799ff;
   cursor: not-allowed; opacity: 0.6;
 }
-.doc-file-empty {
+.doc-ai-wrap {
+  flex: none !important;
+  min-height: unset !important;
+}
+.doc-ai-wrap .bp-ai-body {
+  flex: none;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
   display: flex; flex-direction: column; align-items: center;
   gap: 10px; padding: 32px 0;
   color: var(--text-3); font-size: 13px;
