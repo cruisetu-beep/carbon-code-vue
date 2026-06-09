@@ -154,11 +154,12 @@ const files = computed(() => {
 // ── AI 智能解析（动态查找 children 中的 aiSummary）────────────
 const aiFullText = computed(() => {
   const n = rawNode.value
+  console.log('[DocPanel] rawNode:', n?.id, n?.type, n?.levelType, 'children:', n?.children?.map(c => c.type + '/' + c.levelType))
   if (!n) return ''
-  // 查找 children 中的 aiSummary（兼容 type 大小写和仅 levelType 匹配）
   const aiNode = (n.children || []).find(c =>
     (c.type === 'aiSummary' || c.type === 'aiSummary') && c.levelType === 'AI节点'
   ) || (n.children || []).find(c => c.levelType === 'AI节点' && c.data)
+  console.log('[DocPanel] aiNode:', aiNode?.id, aiNode?.levelType, 'data len:', aiNode?.data?.length)
   return aiNode?.data || ''
 })
 
