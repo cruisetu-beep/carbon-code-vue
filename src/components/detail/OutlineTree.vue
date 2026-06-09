@@ -32,11 +32,11 @@
             :selectedId="selectedId"
             @select="$emit('select', $event)"
           >
-            <!-- 三级节点：文件节点 -->
+            <!-- 三级节点 -->
             <TreeNode
               v-for="lv3 in childrenOf(lv2)" :key="lv3.id"
               :nodeId="lv3.id"
-              type="doc"
+              :type="treeTypeOf(lv3)"
               :name="lv3.name"
               :selectedId="selectedId"
               @select="$emit('select', $event)"
@@ -78,6 +78,15 @@ const rootChildren = computed(() => {
 })
 
 // 获取子节点，过滤掉 aiSummary
+const treeTypeOf = (node) => {
+  if (!node) return 'group'
+  if (node.type === 'file' || node.levelType === '文件节点') return 'doc'
+  if (node.type === 'dataQuantity' || node.type === 'data') return 'group'
+  if (node.type === 'baseInfo' || node.type === 'modelConfig') return 'group'
+  if (node.type === 'aiSummary') return 'group'
+  return 'group'
+}
+
 const childrenOf = (node) =>
   (node.children || []).filter(n => n.type !== 'aiSummary')
 
