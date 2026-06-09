@@ -84,7 +84,7 @@ const childrenOf = (node) =>
 // 节点类型映射
 const nodeType = (node) => {
   if (node.type === 'file') return 'doc'
-  if (node.type === 'data' || node.type === 'dataQuantity') return 'chunk'
+  if (node.type === 'data' || node.type === 'dataQuantity') return 'group'
   if (node.levelType === '文件节点') return 'doc'
   return 'group'
 }
