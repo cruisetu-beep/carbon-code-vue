@@ -155,7 +155,10 @@ const files = computed(() => {
 const aiFullText = computed(() => {
   const n = rawNode.value
   if (!n) return ''
-  const aiNode = (n.children || []).find(c => c.type === 'aiSummary' && c.levelType === 'AI节点')
+  // 查找 children 中的 aiSummary（兼容 type 大小写和仅 levelType 匹配）
+  const aiNode = (n.children || []).find(c =>
+    (c.type === 'aiSummary' || c.type === 'aiSummary') && c.levelType === 'AI节点'
+  ) || (n.children || []).find(c => c.levelType === 'AI节点' && c.data)
   return aiNode?.data || ''
 })
 

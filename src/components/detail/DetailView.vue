@@ -119,16 +119,19 @@ function findNodeType(id) {
   return null
 }
 
-// 在原始 _rootNode 树里找节点，返回 { node, lv1Parent, lv2Parent }
+// 在原始 _rootNode 树里找节点，返回 { node, lv1Parent, lv2Parent, lv3Parent }
 function findRawNode(id) {
   const rootNode = detail.value?._rootNode
   if (!rootNode) return null
   for (const lv1 of (rootNode.children || [])) {
-    if (lv1.id === id) return { node: lv1, lv1Parent: null, lv2Parent: null }
+    if (lv1.id === id) return { node: lv1, lv1Parent: null, lv2Parent: null, lv3Parent: null }
     for (const lv2 of (lv1.children || [])) {
-      if (lv2.id === id) return { node: lv2, lv1Parent: lv1, lv2Parent: null }
+      if (lv2.id === id) return { node: lv2, lv1Parent: lv1, lv2Parent: null, lv3Parent: null }
       for (const lv3 of (lv2.children || [])) {
-        if (lv3.id === id) return { node: lv3, lv1Parent: lv1, lv2Parent: lv2 }
+        if (lv3.id === id) return { node: lv3, lv1Parent: lv1, lv2Parent: lv2, lv3Parent: null }
+        for (const lv4 of (lv3.children || [])) {
+          if (lv4.id === id) return { node: lv4, lv1Parent: lv1, lv2Parent: lv2, lv3Parent: lv3 }
+        }
       }
     }
   }
@@ -160,8 +163,12 @@ function onSelectNode(id) {
     // 真实接口节点：在原始树里找，自动展开父级
     const found = findRawNode(id)
     if (found) {
-      if (found.lv2Parent) {
-        // 三级节点（文件节点）：展开一级父
+      if (found.lv3Parent) {
+        // 四级节点（文件节点下的子节点）
+        expandedSubsystem.value = found.lv1Parent?.id || null
+        expandedDoc.value = found.lv3Parent.id
+      } else if (found.lv2Parent) {
+        // 三级节点（文件节点）：展开一级父，expandedDoc 设为文档二级节点 id
         expandedSubsystem.value = found.lv1Parent?.id || null
         expandedDoc.value = found.lv2Parent.id
       } else if (found.lv1Parent) {

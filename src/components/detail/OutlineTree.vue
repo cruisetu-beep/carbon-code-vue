@@ -92,7 +92,9 @@ const nodeType = (node) => {
 // 数量标注
 const countOf = (node) => {
   if (node.type === 'file') {
-    const cnt = Array.isArray(node.data) ? node.data.length : 0
+    // 优先从 children 里数文件节点，兜底用 data 数组
+    const fromChildren = (node.children || []).filter(c => c.levelType === '文件节点' || (c.type === '' && c.data?.objectName)).length
+    const cnt = fromChildren || (Array.isArray(node.data) ? node.data.length : 0)
     return cnt > 0 ? `${cnt}份` : ''
   }
   if (node.type === 'modelConfig') {
