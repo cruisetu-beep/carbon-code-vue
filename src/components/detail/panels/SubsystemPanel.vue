@@ -72,8 +72,8 @@
       <EnergyChart :data="energyData" :unit="energyUnit" :color="color"/>
     </template>
 
-    <!-- AI 智能解析（分项计量：打字机样式，取接口 aiSummary 节点） -->
-    <template v-if="isSubEnergy">
+    <!-- AI 智能解析（动态：有 aiSummary 子节点就展示打字机）-->
+    <template v-if="aiFullText">
       <div class="bp-ai-wrap">
         <div class="bp-ai-header">
           <AppIcon name="sparkles" :size="11" stroke="#4dc9ff"/>
@@ -86,7 +86,7 @@
         </div>
       </div>
     </template>
-    <AISummary v-else :text="s.summary"/>
+    <AISummary v-else-if="s.summary" :text="s.summary"/>
 
     <template v-if="s.stats && s.stats.length">
       <div class="dv-panel-section-title">结构化字段</div>
@@ -232,14 +232,16 @@ const dataStatus = computed(() => {
   }
 })
 
-// ── 分项计量 AI 打字机 ─────────────────────────────────────────
+// ── AI 打字机（动态查找任意二级节点下的 aiSummary）─────────────
 const aiFullText = computed(() => {
-  if (!isSubEnergy.value) return ''
   const rootNode = props.detail?._rootNode
   if (!rootNode) return ''
-  const subEnergyNode = (rootNode.children || []).find(n => n.type === 'subEnergy')
-  if (!subEnergyNode) return ''
-  const aiNode = (subEnergyNode.children || []).find(n => n.type === 'aiSummary')
+  // 找当前子系统对应的一级节点（node.ref 是原始 lv1 节点）
+  const lv1Node = (rootNode.children || []).find(n =>
+    n.id === props.node?.ref?.id || n.id === props.node?.id
+  )
+  if (!lv1Node) return ''
+  const aiNode = (lv1Node.children || []).find(n => n.type === 'aiSummary')
   return aiNode?.data || ''
 })
 
