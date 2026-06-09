@@ -17,8 +17,8 @@ const TYPE_COLORS = {
 function nodeTypeOf(n) {
   if (!n) return 'group'
   if (n.type === 'file')         return 'doc'
-  if (n.type === 'data')         return 'chunk'
-  if (n.type === 'dataQuantity') return 'chunk'
+  if (n.type === 'data')         return 'group'
+  if (n.type === 'dataQuantity') return 'group'
   if (n.levelType === '文件节点') return 'doc'
   return 'group'
 }
