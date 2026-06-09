@@ -4,7 +4,7 @@
       <AppIcon :name="icon || 'panel'" :size="18" stroke="#fff"/>
     </div>
     <div class="dv-panel-title-wrap">
-      <div class="dv-panel-type">{{ type }}</div>
+      <div v-if="type && type !== name" class="dv-panel-type">{{ type }}</div>
       <div class="dv-panel-title">{{ name }}</div>
       <div v-if="sub" class="dv-panel-sub">{{ sub }}</div>
     </div>
