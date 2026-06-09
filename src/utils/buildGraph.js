@@ -130,14 +130,14 @@ export function dvBuildGraph(detail, expandedSubsystem, expandedDoc) {
 
                 nodes.push({
                   id: lv3.id,
-                  type: 'doc',
+                  type: nodeTypeOf(lv3),
                   name: lv3.name,
                   x: lx, y: ly, r: 6,
                   parent: lv2.id,
                   ref: lv3,
                   color,
                 })
-                edges.push({ from: lv2.id, to: lv3.id, kind: 'describes' })
+                edges.push({ from: lv2.id, to: lv3.id, kind: nodeTypeOf(lv3) === 'doc' ? 'describes' : 'contains' })
               })
             }
           }
