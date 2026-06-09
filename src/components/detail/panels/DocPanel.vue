@@ -70,7 +70,7 @@
 </template>
 
 <script setup>
-import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
+import { computed, ref, watch, onUnmounted } from 'vue'
 import AppIcon      from '../../shared/AppIcon.vue'
 import PanelHeader   from '../shared/PanelHeader.vue'
 import { DV_COLORS } from '../../../data/constants.js'
@@ -174,7 +174,7 @@ const aiBodyEl         = ref(null)
 let   aiTimer          = null
 
 function startAiTyping(text) {
-  clearInterval(aiTimer)
+  if (aiTimer) { clearInterval(aiTimer); aiTimer = null }
   aiDisplayText.value = ''
   aiTyping.value = true
   aiTypingProgress.value = 0
@@ -182,6 +182,7 @@ function startAiTyping(text) {
   aiTimer = setInterval(() => {
     if (i >= text.length) {
       clearInterval(aiTimer)
+      aiTimer = null
       aiTyping.value = false
       aiTypingProgress.value = 100
       return
@@ -198,8 +199,9 @@ const aiDisplayHtml = computed(() => renderMd(aiDisplayText.value))
 
 watch(aiFullText, (val) => {
   if (val) startAiTyping(val)
+  else { if (aiTimer) { clearInterval(aiTimer); aiTimer = null }; aiDisplayText.value = ''; aiTyping.value = false }
 }, { immediate: true })
-onUnmounted(() => clearInterval(aiTimer))
+onUnmounted(() => { if (aiTimer) clearInterval(aiTimer) })
 
 function extOf(f) {
   const name = f.name || ''
