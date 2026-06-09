@@ -51,11 +51,27 @@
       <svg width="32" height="32" viewBox="0 0 24 24" fill="none"><path d="M3 4a2 2 0 0 1 2-2h9l5 5v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4z" stroke="#8da3c8" stroke-width="1.5" fill="none"/></svg>
       <span>暂无文件</span>
     </div>
+
+    <!-- AI 智能解析 -->
+    <template v-if="aiFullText">
+      <div class="bp-ai-wrap" style="margin-top: 12px;">
+        <div class="bp-ai-header">
+          <AppIcon name="sparkles" :size="11" stroke="#4dc9ff"/>
+          <span>AI 智能解析</span>
+          <span v-if="aiTyping" class="bp-ai-progress">{{ aiTypingProgress }}%</span>
+        </div>
+        <div class="bp-ai-body" ref="aiBodyEl">
+          <span v-html="aiDisplayHtml"/>
+          <span v-if="aiTyping" class="bp-ai-cursor">|</span>
+        </div>
+      </div>
+    </template>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, watch, onBeforeUnmount } from 'vue'
+import AppIcon      from '../../shared/AppIcon.vue'
 import PanelHeader   from '../shared/PanelHeader.vue'
 import { DV_COLORS } from '../../../data/constants.js'
 
@@ -125,7 +141,52 @@ const files = computed(() => {
   return []
 })
 
-function extOf(f) {
+// ── AI 智能解析（动态查找 children 中的 aiSummary）────────────
+const aiFullText = computed(() => {
+  const n = rawNode.value
+  if (!n) return ''
+  const aiNode = (n.children || []).find(c => c.type === 'aiSummary')
+  return aiNode?.data || ''
+})
+
+function renderMd(text) {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n/g, '<br>')
+}
+
+const aiDisplayText    = ref('')
+const aiTyping         = ref(false)
+const aiTypingProgress = ref(0)
+const aiBodyEl         = ref(null)
+let   aiTimer          = null
+
+function startAiTyping(text) {
+  clearInterval(aiTimer)
+  aiDisplayText.value = ''
+  aiTyping.value = true
+  aiTypingProgress.value = 0
+  let i = 0
+  aiTimer = setInterval(() => {
+    if (i >= text.length) {
+      clearInterval(aiTimer)
+      aiTyping.value = false
+      aiTypingProgress.value = 100
+      return
+    }
+    const step = text.length > 500 ? 3 : 1
+    aiDisplayText.value += text.slice(i, i + step)
+    i += step
+    aiTypingProgress.value = Math.min(99, Math.round(i / text.length * 100))
+    if (aiBodyEl.value) aiBodyEl.value.scrollTop = aiBodyEl.value.scrollHeight
+  }, 30)
+}
+
+const aiDisplayHtml = computed(() => renderMd(aiDisplayText.value))
+
+watch(aiFullText, (val) => { if (val) startAiTyping(val) }, { immediate: true })
+onBeforeUnmount(() => clearInterval(aiTimer))
+
   const name = f.name || ''
   const dot = name.lastIndexOf('.')
   return dot >= 0 ? name.slice(dot + 1).toUpperCase() : 'FILE'
