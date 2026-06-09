@@ -93,9 +93,23 @@
       </div>
     </template>
 
-    <!-- ⑤ 通用兜底：key-value 平铺 or 数组表格 -->
+    <!-- ⑤ 各子系统 baseInfo：扁平数组转信息卡片 -->
+    <template v-else-if="nodeType === 'baseInfo' && flatRecords.length">
+      <div v-for="(record, ri) in flatRecords" :key="ri">
+        <div v-if="flatRecords.length > 1" class="dv-panel-section-title">记录 {{ ri + 1 }}</div>
+        <div class="rn-kv-list">
+          <div v-for="row in record" :key="row.key" class="rn-kv-row">
+            <span class="rn-kv-key">{{ row.label }}</span>
+            <span class="rn-kv-val" :class="row.highlight ? 'rn-val-highlight' : ''">{{ row.val }}</span>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <!-- ⑥ 通用兜底 -->
     <template v-else>
-      <template v-if="Array.isArray(rawData) && rawData.length">
+      <div v-if="!rawData" class="rn-empty">暂无数据</div>
+      <template v-else-if="Array.isArray(rawData) && rawData.length">
         <div class="dv-panel-section-title">数据列表（{{ rawData.length }}条）</div>
         <div class="rn-kv-list">
           <div v-for="(item, i) in rawData.slice(0, 20)" :key="i" class="rn-kv-row">
@@ -201,7 +215,83 @@ const chartData = computed(() =>
     .filter(d => d.time && d.value != null)
 )
 
-// ── 通用对象平铺 ───────────────────────────────────────────────
+// ── 各子系统 baseInfo 字段中文映射 ────────────────────────────
+const SKIP_FIELDS = new Set(['table','tagID','tag','state','gisId','mark','picture','certification',
+  'hashValue','versionID','description','bucketName','objectName','showType',
+  'order','ownerID','streetCode','buildId','buildID','projectID','stationCaseId','stationId'])
+
+const FIELD_LABELS = {
+  // 通用
+  projectName:'项目名称', nickName:'简称', address:'地址', street:'所属街道',
+  longitude:'经度', latitude:'纬度', year:'年份', buildFunc:'建筑功能',
+  area:'建筑面积', buildName:'建筑名称', files:'相关文档',
+  // 绿色建筑
+  greenID:'绿建编号', greenType:'认证类型', greenLevel:'认证等级', greenYear:'认证年份',
+  // 能效对标
+  totalCoal:'总标煤量(kgce)', unitCoal:'单位面积煤耗(kgce/m²)',
+  commonValue:'基准值', advancedValue:'先进值',
+  resultLevel:'对标等级', resultDesc:'对标结果',
+  // 能效提升
+  group:'所属批次', equParam1:'设备参数1', equParam2:'设备参数2', equParam3:'设备参数3',
+  // 充电桩
+  stationName:'充电站名称', stationType:'站点类型', stationStatus:'运营状态',
+  directNum:'直流桩数', swapNum:'交流桩数', time:'建站时间',
+  // 绿电绿证
+  transactionNumber:'交易编号', greenCertificateNum:'绿证数量(张)',
+  gsProjectCode:'项目代码', gsProjectType:'项目类型', gsProjectAddress:'项目所在地',
+  productionDate:'生产年月', transactionCity:'交易平台', rate:'价格(元/张)',
+  subsidyPow:'交易电量(万kWh)', enterpriseTitle:'购买企业',
+  gsProjectName:'绿证项目名称', declarationDate:'申报日期',
+  transactionDate:'交易日期', averagePrice:'均价', totalPrice:'总价',
+  saleUnit:'销售单位', reduceCO2:'减排量(吨CO₂)',
+  // 碳效码
+  evaluation:'碳效评价(分)', evaluationCode:'碳效码等级',
+  evaDate:'评价年份', carbonIntensity:'碳排放强度',
+  carbonScore:'碳排放评分', unitCarbonScore:'单位碳排评分',
+  paramScore:'参数评分', tips:'备注',
+}
+
+const HIGHLIGHT_FIELDS = new Set([
+  'greenLevel','greenType','resultDesc','resultLevel','evaluationCode',
+  'stationStatus','stationType',
+])
+
+const STATION_TYPE  = { 1:'公共充电站', 2:'自用充电站', 3:'专用充电站' }
+const STATION_STATUS = { 10:'建设中', 20:'待运营', 30:'运营中', 40:'暂停营业', 50:'正常运营' }
+const RESULT_LEVEL   = { 1:'对标先进', 2:'未对标', 3:'对标基准' }
+
+function formatVal(key, val) {
+  if (val === null || val === undefined || val === '') return null
+  if (key === 'stationType')   return STATION_TYPE[val]   || String(val)
+  if (key === 'stationStatus') return STATION_STATUS[val] || String(val)
+  if (key === 'resultLevel')   return RESULT_LEVEL[val]   || String(val)
+  if (key === 'files' || Array.isArray(val)) return null   // 文件/数组跳过
+  if (typeof val === 'object') return null
+  return String(val)
+}
+
+// 把每条原始记录转成 [{key, label, val, highlight}] 数组
+const flatRecords = computed(() => {
+  if (nodeType.value !== 'baseInfo') return []
+  const arr = Array.isArray(rawData.value) ? rawData.value : []
+  return arr.map(item => {
+    const rows = []
+    Object.entries(item).forEach(([k, v]) => {
+      if (SKIP_FIELDS.has(k)) return
+      const formatted = formatVal(k, v)
+      if (formatted === null) return
+      rows.push({
+        key: k,
+        label: FIELD_LABELS[k] || k,
+        val: formatted,
+        highlight: HIGHLIGHT_FIELDS.has(k),
+      })
+    })
+    return rows
+  }).filter(r => r.length > 0)
+})
+
+
 const flatObj = computed(() => {
   const d = rawData.value
   if (!d || typeof d !== 'object' || Array.isArray(d)) return {}
@@ -293,6 +383,8 @@ const flatObj = computed(() => {
 .rn-dq-right { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
 .rn-dq-remark{ font-size: 11px; color: var(--text-2); text-align: right; }
 .rn-dq-time  { font-size: 10px; color: var(--text-3); }
+
+.rn-val-highlight { color: #4dc9ff; font-weight: 600; }
 
 .rn-more  { font-size: 11px; color: var(--text-3); text-align: center; padding: 6px 0; }
 .rn-empty { font-size: 13px; color: var(--text-3); text-align: center; padding: 32px 0; }
