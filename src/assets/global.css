@@ -499,6 +499,16 @@
   flex-direction: column;
   min-height: 0;
 }
+/* DocPanel 内的 AI 区域不参与 flex 拉伸 */
+.dv-panel > .bp-ai-wrap {
+  flex: none;
+  min-height: unset;
+}
+.dv-panel > .bp-ai-wrap .bp-ai-body {
+  flex: none;
+  max-height: 300px;
+  overflow-y: auto;
+}
 .bp-ai-header {
   display: flex; align-items: center; gap: 6px;
   padding: 8px 12px;
