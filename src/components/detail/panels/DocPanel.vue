@@ -187,6 +187,7 @@ const aiDisplayHtml = computed(() => renderMd(aiDisplayText.value))
 watch(aiFullText, (val) => { if (val) startAiTyping(val) }, { immediate: true })
 onBeforeUnmount(() => clearInterval(aiTimer))
 
+function extOf(f) {
   const name = f.name || ''
   const dot = name.lastIndexOf('.')
   return dot >= 0 ? name.slice(dot + 1).toUpperCase() : 'FILE'
