@@ -11,6 +11,7 @@ export const DV_COLORS = {
   doc: "#ff6b8a",
   chunk: "#a799ff",
   standard: "#ff8a47",
+  obsolete: "#e0394f",
 };
 
 export const DV_TYPE_LABEL = {
@@ -22,82 +23,134 @@ export const DV_TYPE_LABEL = {
   doc: "文档",
   chunk: "切片",
   standard: "标准",
+  obsolete: "淘汰与低效设备",
 };
 
 export const SUBSYSTEMS = [
-  {k:"sub_meter", n:"分项计量", icon:"panel", color:"#4dc9ff",
-    desc:"按 照明插座 / 空调 / 动力 / 特殊用电 拆分",
-    fields: [
-      {k:"meter_count", n:"计量点位数量", t:"number", ph:"个", req:true},
-      {k:"meter_protocol", n:"通讯协议", t:"select", opts:["Modbus-RTU","Modbus-TCP","BACnet","MQTT","其他"]},
-      {k:"meter_freq", n:"采集频率", t:"select", opts:["1 分钟","5 分钟","15 分钟","小时"]},
-      {k:"meter_start", n:"接入时间", t:"date"},
-    ]},
-  {k:"vpp", n:"虚拟电厂", icon:"bolt", color:"#7a5cff",
-    desc:"可调节负荷 / 需求响应 / 储能资源",
-    fields: [
-      {k:"vpp_capacity", n:"可调节容量 (kW)", t:"number", ph:"0"},
-      {k:"vpp_response", n:"响应时间", t:"select", opts:["秒级","分钟级","小时级"]},
-      {k:"vpp_battery", n:"储能容量 (kWh)", t:"number", ph:"0"},
-      {k:"vpp_market", n:"参与市场", t:"select", opts:["需求响应","辅助服务","现货市场","均参与"]},
-    ]},
-  {k:"retrofit", n:"节能改造", icon:"leaf", color:"#2bd9a8",
-    desc:"已实施或规划中的节能项目",
-    fields: [
-      {k:"retrofit_count", n:"改造项目数", t:"number", ph:"个"},
-      {k:"retrofit_invest", n:"累计投入 (万元)", t:"number", ph:"0"},
-      {k:"retrofit_save", n:"年节能量 (万 kWh)", t:"number", ph:"0"},
-      {k:"retrofit_status", n:"主要类型", t:"select", opts:["冷热源","照明","围护结构","控制系统","综合"]},
-    ]},
-  {k:"charge", n:"充电桩", icon:"plug", color:"#ffb547",
-    desc:"电动汽车充电基础设施",
-    fields: [
-      {k:"charge_slow", n:"慢充桩数量", t:"number", ph:"个"},
-      {k:"charge_fast", n:"快充桩数量", t:"number", ph:"个"},
-      {k:"charge_power", n:"总装机功率 (kW)", t:"number", ph:"0"},
-      {k:"charge_v2g", n:"是否支持 V2G", t:"select", opts:["否","部分支持","全部支持"]},
-    ]},
-  {k:"pv", n:"光伏", icon:"sun", color:"#ff8a47",
-    desc:"屋顶 / BIPV 光伏发电系统",
-    fields: [
-      {k:"pv_capacity", n:"装机容量 (kWp)", t:"number", ph:"0"},
-      {k:"pv_area", n:"光伏面积 (㎡)", t:"number", ph:"0"},
-      {k:"pv_type", n:"组件类型", t:"select", opts:["单晶硅","多晶硅","薄膜","BIPV"]},
-      {k:"pv_year", n:"投运年份", t:"number", ph:"YYYY"},
-    ]},
+  {
+    k: "T001", n: "分项计量", icon: "panel", color: "#4dc9ff",
+    desc: "按 照明插座 / 空调 / 动力 / 特殊用电 拆分",
+    docs: [
+      { k: "audit", n: "能源审计报告", desc: "能耗诊断 / 设备运行 / 节能潜力", required: true },
+      { k: "equip", n: "建筑设备清单", desc: "机电系统 / 设备型号台账", required: true },
+    ]
+  },
+  {
+    k: "T002", n: "绿色建筑", icon: "tag", color: "#2bd9a8",
+    desc: "国家星级绿色建筑或绿色商店认证",
+    docs: []
+  },
+  {
+    k: "T003", n: "节能改造", icon: "leaf", color: "#a799ff",
+    desc: "已实施或规划中的节能项目",
+    docs: [
+      { k: "retrofit", n: "建筑改造项目报告", desc: "历次节能改造方案", required: false }
+    ]
+  },
+  {
+    k: "T004", n: "超低能耗建筑", icon: "cube", color: "#ffb547",
+    desc: "超低能耗/近零能耗建筑指标管理",
+    docs: []
+  },
+  {
+    k: "T005", n: "充电桩", icon: "plug", color: "#ff8a47",
+    desc: "电动汽车充电基础设施",
+    docs: [
+      { k: "drawing", n: "建筑图纸", desc: "CAD / 车位平面布局图", required: false }
+    ]
+  },
+  {
+    k: "T006", n: "光伏", icon: "sun", color: "#7a5cff",
+    desc: "屋顶 / BIPV 光伏发电系统",
+    docs: [
+      { k: "drawing", n: "建筑图纸", desc: "CAD / 光伏点位布局图", required: false }
+    ]
+  },
+  {
+    k: "T007", n: "虚拟电厂", icon: "bolt", color: "#6a4eff",
+    desc: "可调节负荷 / 需求响应 / 储能资源",
+    docs: [
+      { k: "standard", n: "考核评价标准", desc: "地方碳考核办法 / 限额", required: false }
+    ]
+  },
+  {
+    k: "T008", n: "重点用能单位", icon: "database", color: "#ff6b8a",
+    desc: "万家企业等重点用能单位监控",
+    docs: []
+  },
+  {
+    k: "T009", n: "节能宣传", icon: "bell", color: "#4dc9ff",
+    desc: "建筑内部节能低碳宣传及培训",
+    docs: []
+  },
+  {
+    k: "T010", n: "能源审计", icon: "doc", color: "#2bd9a8",
+    desc: "定期执行的建筑综合能源审计",
+    docs: []
+  },
+  {
+    k: "T011", n: "能效对标", icon: "scan", color: "#a799ff",
+    desc: "国家/地方能效定额对标",
+    docs: []
+  },
+  {
+    k: "T012", n: "楼宇调适", icon: "settings", color: "#ffb547",
+    desc: "暖通空调及照明控制系统调适",
+    docs: []
+  },
+  {
+    k: "T013", n: "能效提升", icon: "sparkles", color: "#ff8a47",
+    desc: "重点设备或系统的能效提升方案",
+    docs: []
+  },
+  {
+    k: "T014", n: "低碳实践区", icon: "factory", color: "#7a5cff",
+    desc: "区域碳中和及低碳建筑实践",
+    docs: []
+  },
+  {
+    k: "T015", n: "碳效码", icon: "scan", color: "#6a4eff",
+    desc: "建筑碳排放效能评级与赋码",
+    docs: []
+  },
+  {
+    k: "T016", n: "绿电绿证", icon: "tag", color: "#ff6b8a",
+    desc: "绿电交易与绿色电力证书购买",
+    docs: []
+  },
 ];
 
 export const DOC_TYPES = [
-  {k:"audit", n:"能源审计报告", desc:"能耗诊断 / 设备运行 / 节能潜力", required:true},
-  {k:"equip", n:"建筑设备清单", desc:"机电系统 / 设备型号台账", required:true},
-  {k:"retrofit", n:"建筑改造项目报告", desc:"历次节能改造方案", required:false},
-  {k:"drawing", n:"建筑图纸", desc:"CAD / 平面 / 立面 / 系统图", required:false},
-  {k:"standard", n:"考核评价标准", desc:"地方碳考核办法 / 限额", required:false},
+  { k: "audit", n: "能源审计报告", desc: "能耗诊断 / 设备运行 / 节能潜力", required: true },
+  { k: "equip", n: "建筑设备清单", desc: "机电系统 / 设备型号台账", required: true },
+  { k: "retrofit", n: "建筑改造项目报告", desc: "历次节能改造方案", required: false },
+  { k: "drawing", n: "建筑图纸", desc: "CAD / 平面 / 立面 / 系统图", required: false },
+  { k: "standard", n: "考核评价标准", desc: "地方碳考核办法 / 限额", required: false },
 ];
 
-export const FUNC_MAP = {office:"办公", mall:"商场", hotel:"酒店", hospital:"医院", school:"学校", mixed:"综合体"};
+export const FUNC_MAP = { office: "办公", mall: "商场", hotel: "酒店", hospital: "医院", school: "学校", mixed: "综合体" };
 
 export const SAMPLE_DOCS = {
   audit: [
-    {name:"2024年度能源审计报告.pdf", size:"4.2 MB", pages: 86},
+    { name: "2024年度能源审计报告.pdf", size: "4.2 MB", pages: 86 },
   ],
   equip: [
-    {name:"机电设备总清单_v2.3.xlsx", size:"1.8 MB", pages: 12},
+    { name: "机电设备总清单_v2.3.xlsx", size: "1.8 MB", pages: 12 },
   ],
   retrofit: [
-    {name:"2022冷源系统改造总结.docx", size:"6.4 MB", pages: 42},
-    {name:"照明LED改造方案.pdf", size:"2.1 MB", pages: 18},
+    { name: "2022冷源系统改造总结.docx", size: "6.4 MB", pages: 42 },
+    { name: "照明LED改造方案.pdf", size: "2.1 MB", pages: 18 },
   ],
   drawing: [
-    {name:"T1主楼平面图.dwg", size:"12.6 MB", pages: 1},
+    { name: "T1主楼平面图.dwg", size: "12.6 MB", pages: 1 },
   ],
   standard: [],
 };
 
 export const STEPS = [
-  {k:"basic", n:"建筑基础信息", d:"建筑标识与功能属性"},
-  {k:"docs",  n:"资料文档",     d:"上传 + AI 自动解析"},
-  {k:"subs",  n:"子项配置",     d:"分项 / VPP / 改造 / 充电 / 光伏"},
-  {k:"graph", n:"图谱构建",     d:"知识库智能融合"},
-  {k:"done",  n:"完成",         d:"资源包就绪"},
+  { k: "basic", n: "建筑基础信息", d: "建筑标识与功能属性" },
+  { k: "subs", n: "子项与资料配置", d: "分项 / VPP / 资料上传" },
+  { k: "obsolete", n: "淘汰设备清单", d: "低效与淘汰设备台账" },
+  { k: "graph", n: "图谱构建", d: "知识库智能融合" },
+  { k: "done", n: "完成", d: "资源包就绪" },
 ];

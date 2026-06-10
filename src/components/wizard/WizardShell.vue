@@ -36,21 +36,21 @@
     <!-- 步骤内容 -->
     <div style="padding:24px">
       <StepBasic      v-if="stepIdx === 0" :data="pkg" @update="pkg = $event" @next="next"/>
-      <StepDocs       v-else-if="stepIdx === 1" :data="pkg" @update="pkg = $event" @next="next" @prev="prev"/>
-      <StepSubsystems v-else-if="stepIdx === 2" :data="pkg" @update="pkg = $event" @next="next" @prev="prev"/>
-      <StepGraph      v-else-if="stepIdx === 3" :data="pkg" @next="next" @prev="prev"/>
-      <StepDone       v-else-if="stepIdx === 4" :data="pkg" @finish="$emit('back')" @back="$emit('back')"/>
+      <StepSubsystems v-else-if="stepIdx === 1" :data="pkg" :relation-template="relationTemplate" @update="pkg = $event" @next="next" @prev="prev"/>
+      <StepObsolete   v-else-if="stepIdx === 2" :data="pkg" @update="pkg = $event" @next="next" @prev="prev"/>
+      <StepGraph      v-else-if="stepIdx === 3" :data="pkg" @update="pkg = $event" @next="next" @prev="prev"/>
+      <StepDone       v-else-if="stepIdx === 4" :data="pkg" :relation-template="relationTemplate" @finish="$emit('back')" @back="$emit('back')"/>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import AppIcon      from '../shared/AppIcon.vue'
 import Breadcrumb   from '../shared/Breadcrumb.vue'
 import StepBasic    from './StepBasic.vue'
-import StepDocs     from './StepDocs.vue'
 import StepSubsystems from './StepSubsystems.vue'
+import StepObsolete   from './StepObsolete.vue'
 import StepGraph    from './StepGraph.vue'
 import StepDone     from './StepDone.vue'
 import { STEPS }    from '../../data/constants.js'
@@ -59,6 +59,18 @@ defineEmits(['back'])
 
 const stepIdx = ref(0)
 const pkg     = ref({})
+const relationTemplate = ref(null)
+
+onMounted(async () => {
+  try {
+    const res = await fetch('/api/Resource/getResourceRelationTemplate').then(r => r.json()).catch(() => ({}))
+    if (res?.data) {
+      relationTemplate.value = res.data
+    }
+  } catch (e) {
+    console.error('Failed to fetch relation template:', e)
+  }
+})
 
 const currentStep = computed(() => STEPS[stepIdx.value])
 const next = () => { stepIdx.value = Math.min(STEPS.length - 1, stepIdx.value + 1) }
