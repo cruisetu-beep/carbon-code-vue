@@ -22,7 +22,98 @@
       </template>
     </template>
 
-    <!-- ② baseInfo：扁平数组格式（其他二级节点）-->
+    <!-- ② virtualDaynamo baseInfo：虚拟电厂专用 -->
+    <template v-else-if="nodeType === 'baseInfo' && parentType === 'virtualDaynamo' && vdData">
+
+      <!-- 概览统计 -->
+      <div class="dv-panel-section-title">概览统计</div>
+      <div class="vd-overview-row">
+        <div v-for="r in vdData.resource" :key="r.key" class="vd-stat-card vd-stat-purple">
+          <div class="vd-stat-val">{{ r.value }}</div>
+          <div class="vd-stat-label">{{ r.key }}</div>
+        </div>
+        <div class="vd-stat-card vd-stat-blue vd-stat-wide">
+          <div class="vd-stat-val">{{ vdData.totalGenElec?.key?.toLocaleString() }}<span class="vd-stat-unit">{{ vdData.totalGenElec?.value }}</span></div>
+          <div class="vd-stat-label">总发电量</div>
+        </div>
+      </div>
+
+      <!-- 历史参与统计 -->
+      <div class="dv-panel-section-title">历史参与统计</div>
+      <div class="vd-overview-row">
+        <div v-for="h in vdData.historyGeneral" :key="h.key"
+             class="vd-stat-card"
+             :class="h.key === '完成率' ? 'vd-stat-green' : 'vd-stat-teal'">
+          <div class="vd-stat-val">{{ h.key === '完成率' ? vdCompletionRate : h.value }}<span class="vd-stat-unit">{{ h.unit }}</span></div>
+          <div class="vd-stat-label">{{ h.key }}</div>
+        </div>
+      </div>
+
+      <!-- 策略列表 -->
+      <template v-if="vdData.strategies?.length">
+        <div class="dv-panel-section-title">策略列表（{{ vdData.strategies.length }}条）</div>
+        <div class="rn-table">
+          <div class="rn-table-head">
+            <span style="flex:2">策略名称</span>
+            <span style="flex:1;text-align:center">类型</span>
+            <span style="flex:2;text-align:center">响应范围(kW)</span>
+            <span style="flex:1;text-align:center">操作数</span>
+          </div>
+          <div v-for="s in vdData.strategies" :key="s.vdosId" class="rn-table-row vd-table-row">
+            <span style="flex:2" class="vd-strategy-name">{{ s.vdosName }}</span>
+            <span style="flex:1;text-align:center">
+              <span class="vd-tag-dr">{{ s.operationMark }}</span>
+            </span>
+            <span style="flex:2;text-align:center" class="mono vd-range">{{ s.range1 }} ~ {{ s.range2 }}</span>
+            <span style="flex:1;text-align:center" class="vd-op-count">{{ s.operationCount }}</span>
+          </div>
+        </div>
+      </template>
+
+      <!-- 设备（因子）列表 -->
+      <template v-if="vdData.factors?.length">
+        <div class="dv-panel-section-title">设备列表（{{ vdData.factors.length }}台）</div>
+        <div class="vd-factor-list">
+          <div v-for="f in vdData.factors" :key="f.vfId" class="vd-factor-row">
+            <div class="vd-factor-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <rect x="2" y="7" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M8 7V5a4 4 0 0 1 8 0v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                <circle cx="12" cy="14" r="2" fill="currentColor" opacity="0.6"/>
+              </svg>
+            </div>
+            <div class="vd-factor-body">
+              <div class="vd-factor-name">{{ f.vfName }}</div>
+              <div class="vd-factor-desc">{{ f.description }}</div>
+            </div>
+            <div class="vd-factor-power">{{ f.maxLoad }}<span class="vd-factor-unit">kW</span></div>
+          </div>
+        </div>
+      </template>
+
+      <!-- 历史响应事件（最近5条） -->
+      <template v-if="vdRecentEvents.length">
+        <div class="dv-panel-section-title">近期响应事件</div>
+        <div class="vd-event-list">
+          <div v-for="e in vdRecentEvents" :key="e.planBaseId" class="vd-event-row">
+            <div class="vd-event-left">
+              <div class="vd-event-dot" :class="Number(e.actualQuan) > 0 ? 'done' : 'miss'"/>
+              <div class="vd-event-body">
+                <div class="vd-event-name">{{ e.planBaseName }}</div>
+                <div class="vd-event-meta mono">{{ e.planDate }} &nbsp; {{ e.startTime }}–{{ e.endTime }}</div>
+              </div>
+            </div>
+            <div class="vd-event-right">
+              <div class="vd-event-actual" :class="Number(e.actualQuan) > 0 ? 'done' : 'miss'">{{ e.actualQuan }} kWh</div>
+              <div class="vd-event-assign">/ {{ e.assignQuan }} kWh</div>
+            </div>
+          </div>
+        </div>
+      </template>
+
+    </template>
+
+    <!-- ③ baseInfo：扁平数组格式（其他二级节点）-->
     <template v-else-if="nodeType === 'baseInfo' && flatCards.length">
       <!-- 碳效码：特殊展示评分 -->
       <template v-if="parentType === 'carbonQR'">
@@ -295,6 +386,28 @@ const carbonItems = computed(() => {
   return flatCards.value[0]?.items || []
 })
 
+// ── virtualDaynamo baseInfo ───────────────────────────────────
+const vdData = computed(() => {
+  if (nodeType.value !== 'baseInfo' || parentType.value !== 'virtualDaynamo') return null
+  const d = rawData.value
+  if (!d || Array.isArray(d) || typeof d !== 'object') return null
+  return d
+})
+
+const vdCompletionRate = computed(() => {
+  const participated = vdData.value?.historyGeneral?.find(h => h.key === '参与次数')?.value || 0
+  const completed    = vdData.value?.historyGeneral?.find(h => h.key === '完成次数')?.value || 0
+  if (!participated) return 0
+  return Math.round(completed / participated * 100)
+})
+
+const vdRecentEvents = computed(() => {
+  const events = vdData.value?.historyEvents || []
+  return [...events]
+    .sort((a, b) => (b.planDate || '').localeCompare(a.planDate || ''))
+    .slice(0, 5)
+})
+
 // ── 通用数组 ───────────────────────────────────────────────────
 const dataArr = computed(() =>
   Array.isArray(rawData.value) ? rawData.value : []
@@ -397,4 +510,76 @@ const chartData = computed(() =>
 
 .rn-more  { font-size: 11px; color: var(--text-3); text-align: center; padding: 6px 0; }
 .rn-empty { font-size: 13px; color: var(--text-3); text-align: center; padding: 32px 0; }
+
+/* ── 虚拟电厂 ──────────────────────────────────────────────── */
+.vd-overview-row {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 4px;
+}
+.vd-stat-card {
+  padding: 10px 10px 8px; border-radius: 8px; text-align: center;
+  border: 1px solid transparent;
+}
+.vd-stat-wide { grid-column: span 1; }
+.vd-stat-purple { background: rgba(167,153,255,0.08); border-color: rgba(167,153,255,0.2); }
+.vd-stat-blue   { background: rgba(77,201,255,0.08);  border-color: rgba(77,201,255,0.2);  }
+.vd-stat-teal   { background: rgba(43,217,168,0.07);  border-color: rgba(43,217,168,0.18); }
+.vd-stat-green  { background: rgba(24,165,114,0.08);  border-color: rgba(24,165,114,0.2);  }
+.vd-stat-val {
+  font-size: 22px; font-weight: 700; line-height: 1.2;
+  color: #4dc9ff;
+}
+.vd-stat-purple .vd-stat-val { color: #a799ff; }
+.vd-stat-teal   .vd-stat-val { color: #2bd9a8; }
+.vd-stat-green  .vd-stat-val { color: #18a572; }
+.vd-stat-unit { font-size: 11px; font-weight: 400; color: var(--text-2); margin-left: 2px; }
+.vd-stat-label { font-size: 11px; color: var(--text-2); margin-top: 3px; }
+
+/* 策略表格 */
+.vd-table-row { display: flex; gap: 0; }
+.vd-strategy-name { color: var(--text-0); font-weight: 500; font-size: 12px; }
+.vd-tag-dr {
+  display: inline-block; padding: 1px 6px; border-radius: 4px;
+  background: rgba(77,201,255,0.1); color: #4dc9ff;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.05em;
+}
+.vd-range { color: var(--text-1); font-size: 11px; }
+.vd-op-count { color: #a799ff; font-weight: 600; font-size: 12px; }
+
+/* 设备列表 */
+.vd-factor-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 4px; }
+.vd-factor-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: 7px;
+  background: rgba(255,255,255,0.5); border: 1px solid var(--line);
+}
+.vd-factor-icon {
+  width: 28px; height: 28px; border-radius: 6px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(167,153,255,0.1); color: #a799ff;
+}
+.vd-factor-body { flex: 1; min-width: 0; }
+.vd-factor-name { font-size: 12px; font-weight: 500; color: var(--text-0); }
+.vd-factor-desc { font-size: 10px; color: var(--text-3); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vd-factor-power { font-size: 14px; font-weight: 700; color: #4dc9ff; flex-shrink: 0; text-align: right; }
+.vd-factor-unit { font-size: 10px; font-weight: 400; color: var(--text-3); }
+
+/* 历史响应事件 */
+.vd-event-list { display: flex; flex-direction: column; gap: 6px; }
+.vd-event-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 10px; border-radius: 7px;
+  background: rgba(255,255,255,0.5); border: 1px solid var(--line); gap: 8px;
+}
+.vd-event-left  { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
+.vd-event-dot   { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.vd-event-dot.done { background: #18a572; box-shadow: 0 0 5px #18a572; }
+.vd-event-dot.miss { background: rgba(150,160,180,0.5); }
+.vd-event-body  { min-width: 0; }
+.vd-event-name  { font-size: 11.5px; font-weight: 500; color: var(--text-0); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vd-event-meta  { font-size: 10px; color: var(--text-3); margin-top: 1px; font-family: "JetBrains Mono", monospace; }
+.vd-event-right { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; }
+.vd-event-actual{ font-size: 12px; font-weight: 600; }
+.vd-event-actual.done { color: #18a572; }
+.vd-event-actual.miss { color: var(--text-3); }
+.vd-event-assign{ font-size: 10px; color: var(--text-3); }
 </style>
