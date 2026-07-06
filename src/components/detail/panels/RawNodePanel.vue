@@ -324,6 +324,14 @@ const FIELD_LABELS = {
   evaDate:'评价年份', carbonIntensity:'碳强度',
   carbonScore:'碳评分', unitCarbonScore:'单位碳评分',
   paramScore:'参数评分', tips:'备注', showType:'展示类型',
+  // 节能改造
+  savRenCaseID:'案例ID', savRenCaseName:'项目名称',
+  unitName:'单位名称', unitCode:'统一社会信用代码',
+  renClass:'改造类别', renTech:'改造技术', renDetails:'改造内容',
+  buildArea:'建筑面积(m²)', renovationArea:'改造面积(m²)',
+  investmentAmount:'投资金额', renovationEnergy:'节能量',
+  subsidyAmount:'补贴金额', selfAmount:'自筹金额',
+  standardEnergy:'标准能耗(吨标煤)', savingRate:'节能率',
 }
 
 const HIGHLIGHT_FIELDS = new Set(['resultDesc','greenLevel','evaluationCode','stationStatus'])
