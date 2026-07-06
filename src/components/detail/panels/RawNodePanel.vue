@@ -522,20 +522,20 @@ const chartData = computed(() =>
 .vd-total-gen-card {
   display: flex; align-items: center; gap: 12px;
   padding: 12px 14px; margin-bottom: 8px; border-radius: 10px;
-  background: linear-gradient(135deg, rgba(167,153,255,0.14), rgba(77,201,255,0.10));
-  border: 1px solid rgba(167,153,255,0.22);
+  background: linear-gradient(135deg, rgba(77,201,255,0.14), rgba(64,150,255,0.10));
+  border: 1px solid rgba(77,201,255,0.22);
 }
 .vd-total-gen-icon {
   flex-shrink: 0; width: 34px; height: 34px; border-radius: 9px;
   display: flex; align-items: center; justify-content: center;
-  background: linear-gradient(135deg, #a799ff, #4dc9ff);
+  background: linear-gradient(135deg, #4dc9ff, #3a8bff);
   color: #fff;
 }
 .vd-total-gen-info { flex: 1; min-width: 0; }
 .vd-total-gen-label { font-size: 11px; color: var(--text-2); margin-bottom: 2px; }
 .vd-total-gen-val {
   font-size: 22px; font-weight: 700; line-height: 1.2;
-  background: linear-gradient(135deg, #a799ff, #4dc9ff);
+  background: linear-gradient(135deg, #4dc9ff, #3a8bff);
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 .vd-total-gen-unit { font-size: 11px; font-weight: 400; color: var(--text-2); margin-left: 3px; -webkit-text-fill-color: var(--text-2); }
