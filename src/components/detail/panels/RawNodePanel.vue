@@ -27,14 +27,21 @@
 
       <!-- 概览统计 -->
       <div class="dv-panel-section-title">概览统计</div>
+      <div class="vd-total-gen-card">
+        <div class="vd-total-gen-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" fill="currentColor"/>
+          </svg>
+        </div>
+        <div class="vd-total-gen-info">
+          <div class="vd-total-gen-label">总发电量</div>
+          <div class="vd-total-gen-val">{{ vdData.totalGenElec?.key?.toLocaleString() }}<span class="vd-total-gen-unit">{{ vdData.totalGenElec?.value }}</span></div>
+        </div>
+      </div>
       <div class="vd-overview-row">
         <div v-for="r in vdData.resource" :key="r.key" class="vd-stat-card vd-stat-purple">
           <div class="vd-stat-val">{{ r.value }}</div>
           <div class="vd-stat-label">{{ r.key }}</div>
-        </div>
-        <div class="vd-stat-card vd-stat-blue vd-stat-wide">
-          <div class="vd-stat-val">{{ vdData.totalGenElec?.key?.toLocaleString() }}<span class="vd-stat-unit">{{ vdData.totalGenElec?.value }}</span></div>
-          <div class="vd-stat-label">总发电量</div>
         </div>
       </div>
 
@@ -512,6 +519,27 @@ const chartData = computed(() =>
 .rn-empty { font-size: 13px; color: var(--text-3); text-align: center; padding: 32px 0; }
 
 /* ── 虚拟电厂 ──────────────────────────────────────────────── */
+.vd-total-gen-card {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; margin-bottom: 8px; border-radius: 10px;
+  background: linear-gradient(135deg, rgba(167,153,255,0.14), rgba(77,201,255,0.10));
+  border: 1px solid rgba(167,153,255,0.22);
+}
+.vd-total-gen-icon {
+  flex-shrink: 0; width: 34px; height: 34px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #a799ff, #4dc9ff);
+  color: #fff;
+}
+.vd-total-gen-info { flex: 1; min-width: 0; }
+.vd-total-gen-label { font-size: 11px; color: var(--text-2); margin-bottom: 2px; }
+.vd-total-gen-val {
+  font-size: 22px; font-weight: 700; line-height: 1.2;
+  background: linear-gradient(135deg, #a799ff, #4dc9ff);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.vd-total-gen-unit { font-size: 11px; font-weight: 400; color: var(--text-2); margin-left: 3px; -webkit-text-fill-color: var(--text-2); }
+
 .vd-overview-row {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 4px;
 }
@@ -519,7 +547,6 @@ const chartData = computed(() =>
   padding: 10px 10px 8px; border-radius: 8px; text-align: center;
   border: 1px solid transparent;
 }
-.vd-stat-wide { grid-column: span 1; }
 .vd-stat-purple { background: rgba(167,153,255,0.08); border-color: rgba(167,153,255,0.2); }
 .vd-stat-blue   { background: rgba(77,201,255,0.08);  border-color: rgba(77,201,255,0.2);  }
 .vd-stat-teal   { background: rgba(43,217,168,0.07);  border-color: rgba(43,217,168,0.18); }
