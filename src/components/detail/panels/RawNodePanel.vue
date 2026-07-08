@@ -324,7 +324,7 @@ const FIELD_LABELS = {
   evaDate:'评价年份', carbonIntensity:'碳强度',
   carbonScore:'碳评分', unitCarbonScore:'单位碳评分',
   paramScore:'参数评分', tips:'备注', showType:'展示类型',
-  // 节能改造
+    // 节能改造
   savRenCaseID:'案例ID', savRenCaseName:'项目名称',
   unitName:'单位名称', unitCode:'统一社会信用代码',
   renClass:'改造类别', renTech:'改造技术', renDetails:'改造内容',
@@ -371,21 +371,99 @@ const subMeter = computed(() =>
 
 // ── baseInfo：扁平数组格式 ────────────────────────────────────
 const flatCards = computed(() => {
-  if (!Array.isArray(rawData.value)) return []
+  const data = rawData.value
+  if (!data) return []
+
+  let rows = []
+  const rawTable = data.table !== undefined ? data.table : data.Table
+
+  if (rawTable) {
+    if (typeof rawTable === 'string') {
+      try {
+        rows = JSON.parse(rawTable)
+      } catch (e) {
+        rows = []
+      }
+    } else if (Array.isArray(rawTable)) {
+      rows = rawTable
+    }
+  } else if (Array.isArray(data)) {
+    rows = data
+  } else {
+    rows = [data]
+  }
+
   if (generalInfo.value.length) return []  // 已由上面处理
-  return rawData.value
+
+  const subTableKey = data.SubTable || data.subTable || data.subtable
+  if (subTableKey && Array.isArray(rows)) {
+    return rows.map(item => {
+      if (item && typeof item === 'object' && item[subTableKey]) {
+        return { ...item, ...item[subTableKey] }
+      }
+      return item
+    })
+  }
+
+  return rows
+})
+
+const columnsMap = computed(() => {
+  const cols = rawData.value?.columns || rawData.value?.Columns
+  if (!Array.isArray(cols)) return {}
+  const mapping = {}
+  cols.forEach(c => {
+    const field = c.field || c.Field || c.columnName || c.ColumnName || c.columnID || c.columnId || c.ColumnID
+    const title = c.title || c.Title || c.columnDispName || c.ColumnDispName || c.markName || c.MarkName || c.columnName || c.ColumnName
+    if (field && title) {
+      mapping[field.toLowerCase()] = title
+    }
+  })
+  return mapping
 })
 
 function mappedRows(card) {
   if (!card) return []
-  return Object.entries(card)
-    .filter(([k, v]) => !SKIP_FIELDS.has(k) && v != null && v !== '' && !Array.isArray(v) && typeof v !== 'object')
-    .map(([k, v]) => ({
-      key: k,
-      label: FIELD_LABELS[k] || k,
-      val: formatVal(k, v),
-      highlight: HIGHLIGHT_FIELDS.has(k),
-    }))
+
+  const cols = rawData.value?.columns || rawData.value?.Columns
+  const hasCols = Array.isArray(cols) && cols.length > 0
+
+  if (hasCols) {
+    // 建立卡片属性全小写字典，支持大小写不敏感提取值
+    const cardLower = {}
+    Object.entries(card).forEach(([k, v]) => {
+      cardLower[k.toLowerCase()] = v
+    })
+
+    return cols.map(c => {
+      const field = c.field || c.Field || c.columnName || c.ColumnName || c.columnID || c.columnId || c.ColumnID
+      const title = c.title || c.Title || c.columnDispName || c.ColumnDispName || c.markName || c.MarkName || c.columnName || c.ColumnName
+      if (!field || c.columnVisible === 0 || c.ColumnVisible === 0) return null
+
+      const val = cardLower[field.toLowerCase()]
+      if (val === undefined || val === null || val === '') return null
+
+      return {
+        key: field,
+        label: title,
+        val: formatVal(field, val),
+        highlight: HIGHLIGHT_FIELDS.has(field.toLowerCase())
+      }
+    }).filter(Boolean)
+  } else {
+    // 兜底：原始展示，使用 SKIP_FIELDS 过滤和 FIELD_LABELS 翻译
+    return Object.entries(card)
+      .filter(([k, v]) => !SKIP_FIELDS.has(k.toLowerCase()) && v != null && v !== '' && !Array.isArray(v) && typeof v !== 'object')
+      .map(([k, v]) => {
+        const camelKey = k.charAt(0).toLowerCase() + k.slice(1)
+        return {
+          key: k,
+          label: FIELD_LABELS[k] || FIELD_LABELS[camelKey] || FIELD_LABELS[k.toLowerCase()] || k,
+          val: formatVal(k, v),
+          highlight: HIGHLIGHT_FIELDS.has(k) || HIGHLIGHT_FIELDS.has(camelKey) || HIGHLIGHT_FIELDS.has(k.toLowerCase())
+        }
+      })
+  }
 }
 
 function formatVal(key, val) {
